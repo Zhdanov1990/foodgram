@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   db:
     image: postgres:13
@@ -27,8 +29,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
+      - static_volume:/app/static      # Django collectstatic здесь
+      - media_volume:/app/media        # Django media здесь
 
   frontend:
     build:
@@ -37,14 +39,14 @@ services:
         npm_config_legacy_peer_deps: 'true'
     container_name: foodgram_frontend
     restart: always
-    command: npm run build
+    command: npm run build              # собираем React → в каталоге frontend/build
     depends_on:
       - backend
     volumes:
-      - static_volume:/usr/share/nginx/html:ro
+      - static_volume:/usr/share/nginx/html:ro   # единый volume для статики и сборки фронта
 
   nginx:
-    image: nginx:1.25.3-alpine
+    image: nginx:1.25.4-alpine
     container_name: foodgram_gateway
     restart: always
     depends_on:
