@@ -1,20 +1,13 @@
-# backend/recipes/admin.py
-
 from django.contrib import admin
 from .models import (
     Recipe, Tag, Ingredient,
     RecipeIngredient, Favorite, ShoppingCart
 )
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'color', 'slug')
-    search_fields = ('name',)
-
-@admin.register(Ingredient)
-class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
-    search_fields = ('name',)
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    min_num = 1
+    extra = 1
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -22,10 +15,23 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
     readonly_fields = ('favorites_count',)
+    inlines = (RecipeIngredientInline,)
 
     def favorites_count(self, obj):
         return obj.in_favorites.count()
     favorites_count.short_description = 'Добавлено в избранное'
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug')
+    search_fields = ('name',)
+    list_filter = ('name',)
+
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = ('name', 'measurement_unit')
+    search_fields = ('name',)
+    list_filter = ('name',)
 
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):

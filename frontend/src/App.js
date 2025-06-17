@@ -277,37 +277,24 @@ function App() {
               onAvatarChange={changeAvatar}
             />
 
-            <Route exact path="/recipes/:id">
-              <SingleCard
-                loggedIn={loggedIn}
-                loadItem={loadSingleItem}
-                updateOrders={updateOrders}
-              />
-            </Route>
-
-            <Route exact path="/about">
-              <About />
-            </Route>
+            <Route
+              exact
+              path="/recipes/:id"
+              component={SingleCard}
+              updateOrders={updateOrders}
+            />
+            <Route exact path="/about" component={About} />
+            <Route exact path="/technologies" component={Technologies} />
+            <Route exact path="/signin" component={SignIn} />
 
             <Route exact path="/reset-password">
               <ResetPassword onPasswordReset={onPasswordReset} />
-            </Route>
-
-            <Route exact path="/technologies">
-              <Technologies />
             </Route>
 
             <Route exact path="/recipes">
               <Main updateOrders={updateOrders} />
             </Route>
 
-            <Route exact path="/signin">
-              <SignIn
-                onSignIn={authorization}
-                submitError={authError}
-                setSubmitError={setAuthError}
-              />
-            </Route>
             <Route exact path="/signup">
               <SignUp
                 onSignUp={registration}

@@ -1,8 +1,7 @@
-#foodgram/urls.py
+from django.contrib import admin
+from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
-from django.urls import path, include
 from django.http import JsonResponse
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -27,7 +26,7 @@ def root_view(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('api/auth/', include('djoser.urls')),
+    path('api/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
     path('api-auth/', include('rest_framework.urls')),
     path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -35,5 +34,7 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )

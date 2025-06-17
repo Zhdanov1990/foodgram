@@ -1,39 +1,54 @@
-# backend/users/models.py
-
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-class User(AbstractUser):
-    # Переопределяем поля groups и user_permissions с уникальными related_name
-    groups = models.ManyToManyField(
-        Group,
-        related_name='custom_user_set',
-        blank=True,
-        help_text='The groups this user belongs to.',
-        verbose_name='groups',
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name='custom_user_permissions_set',
-        blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='user permissions',
-    )
-    
-    # Дополнительное поле аватара
-    avatar = models.ImageField(
-        upload_to='users/avatars/',
-        null=True,
-        blank=True,
-    )
 
-class Subscription(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions'
+class User(AbstractUser):
+    email = models.EmailField(
+        'Email',
+        max_length=254,
+        unique=True
     )
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='followers'
+    first_name = models.CharField(
+        'Имя',
+        max_length=150
+    )
+    last_name = models.CharField(
+        'Фамилия',
+        max_length=150
     )
 
     class Meta:
-        unique_together = ('user', 'author')
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ['id']
+
+    def __str__(self):
+        return self.username
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Автор'
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscription'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'
