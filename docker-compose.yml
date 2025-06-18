@@ -1,45 +1,56 @@
-version: '3.3'
+version: "3.8"
 
 services:
   db:
-    image: postgres:13.0
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+    image: postgres:13
+    restart: always
     env_file:
-      - .env
+      - ../.env
+    environment:
+      POSTGRES_DB: foodgram
+      POSTGRES_USER: foodgram_user
+      POSTGRES_PASSWORD: foodgram_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     image: zhdanova686/foodgram_backend:latest
-    volumes:
-      - static_volume:/app/static/
-      - media_volume:/app/media/
+    container_name: foodgram_backend
+    restart: always
     env_file:
-      - .env
-    depends_on:
-      - db
+      - ../.env
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py loaddata initial_data.json &&
              python manage.py collectstatic --noinput &&
              gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000"
+    depends_on:
+      - db
+    ports:
+      - "8001:8000"
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
 
   frontend:
     image: zhdanova686/foodgram_frontend:latest
+    container_name: infra_frontend
+    restart: always
     volumes:
-      - static_volume:/usr/share/nginx/html/static/
-      - media_volume:/usr/share/nginx/html/media/
+      - static_volume:/usr/share/nginx/html:ro
 
   nginx:
-    image: nginx:1.21
-    volumes:
-      - static_volume:/usr/share/nginx/html/static/
-      - media_volume:/usr/share/nginx/html/media/
-      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf
-    ports:
-      - "80:80"
+    container_name: foodgram_gateway
+    image: nginx:1.25.4-alpine
+    restart: always
     depends_on:
       - backend
       - frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - static_volume:/usr/share/nginx/html:ro
+      - media_volume:/media
+      - ./infra/nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes:
   postgres_data:
