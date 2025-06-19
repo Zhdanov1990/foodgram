@@ -105,6 +105,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            cd ~/foodgram
+            cd ~/foodgram/infra
             docker compose pull
             docker compose up -d 

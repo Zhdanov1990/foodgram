@@ -15,6 +15,3 @@ docker compose up -d --build
 # Очистка неиспользуемых образов
 docker image prune -f
 
-# Обновление IP-адреса в No-IP
-chmod +x update_ddns.sh
-./update_ddns.sh 
