@@ -8,5 +8,5 @@ RUN npm run build
 
 FROM node:16-alpine
 WORKDIR /app
-COPY --from=builder /app/build /usr/share/nginx/html
-CMD ["sh", "-c", "cp -r /usr/share/nginx/html/* /app/build/ && echo 'Frontend build copied'"]
+COPY --from=builder /app/build /app/build
+CMD ["sh", "-c", "cp -r /app/build/* /usr/share/nginx/html/ && echo 'Frontend build copied successfully'"]
