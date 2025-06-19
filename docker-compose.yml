@@ -36,8 +36,8 @@ services:
     container_name: infra_frontend
     restart: "no"
     volumes:
-      - frontend_volume:/usr/share/nginx/html
-    command: ["sh", "-c", "cp -r /app/build/* /usr/share/nginx/html/"]
+      - frontend_volume:/static_frontend_build
+    command: ["sh", "-c", "cp -r /build/* /static_frontend_build/"]
 
   nginx:
     image: nginx:1.25.4-alpine
