@@ -62,16 +62,6 @@ class Recipe(models.Model):
         validators=[MinValueValidator(1)]
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
-    in_favorites = models.ManyToManyField(
-        User,
-        related_name='favorites',
-        verbose_name='В избранном'
-    )
-    in_shopping_carts = models.ManyToManyField(
-        User,
-        related_name='shopping_carts',
-        verbose_name='В списке покупок'
-    )
 
     class Meta:
         verbose_name = 'Рецепт'
