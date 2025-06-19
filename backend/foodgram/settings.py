@@ -95,7 +95,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'collected_static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -127,3 +127,12 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny']
     },
 }
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://foodgram-menu.zapto.org",
+    "http://158.160.26.203",
+]
+
+CORS_ALLOW_CREDENTIALS = True
