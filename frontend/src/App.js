@@ -285,17 +285,7 @@ function App() {
             />
             <Route exact path="/about" component={About} />
             <Route exact path="/technologies" component={Technologies} />
-            <Route
-              exact
-              path="/signin"
-              render={() => (
-                <SignIn
-                  onSignIn={authorization}
-                  submitError={authError}
-                  setSubmitError={setAuthError}
-                />
-              )}
-            />
+            <Route exact path="/signin" component={SignIn} />
 
             <Route exact path="/reset-password">
               <ResetPassword onPasswordReset={onPasswordReset} />
