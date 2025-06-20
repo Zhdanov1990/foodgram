@@ -1,9 +1,7 @@
 FROM nginx:1.25.4-alpine
 
+# Копируем наш Nginx конфиг
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Создаем директории для static и media
+# Создаем директории для статики и медиа
 RUN mkdir -p /usr/share/nginx/static /usr/share/nginx/media
-
-# Frontend build будет скопирован сюда при сборке образа
-# (нужно будет добавить COPY build/ /usr/share/nginx/html/ после сборки frontend) 
