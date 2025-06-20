@@ -24,7 +24,7 @@ class TokenSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = authenticate(
             request=self.context.get('request'),
-            username=attrs.get('email'),
+            email=attrs.get('email'),
             password=attrs.get('password'),
         )
         if not user:
