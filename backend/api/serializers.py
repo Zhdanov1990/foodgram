@@ -36,19 +36,10 @@ class TokenSerializer(serializers.Serializer):
         return attrs
 
 
-class SubscriptionMixin:
-    """Добавляет поле is_subscribed для UserSerializer."""
+class UserListSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка пользователей."""
     is_subscribed = serializers.SerializerMethodField()
 
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if not user.is_authenticated:
-            return False
-        return Subscription.objects.filter(user=user, author=obj).exists()
-
-
-class UserListSerializer(SubscriptionMixin, serializers.ModelSerializer):
-    """Сериализатор для списка пользователей."""
     class Meta:
         model = User
         fields = (
@@ -56,6 +47,12 @@ class UserListSerializer(SubscriptionMixin, serializers.ModelSerializer):
             'first_name', 'last_name',
             'is_subscribed'
         )
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return Subscription.objects.filter(user=user, author=obj).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
