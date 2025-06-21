@@ -167,3 +167,16 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://foodgram-menu.zapto.org",
+    "https://foodgram-menu.zapto.org",
+    "http://158.160.26.203",
+    "http://158.160.26.203:8080",
+]
+
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
