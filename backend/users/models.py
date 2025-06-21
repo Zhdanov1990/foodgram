@@ -16,6 +16,12 @@ class User(AbstractUser):
         'Фамилия',
         max_length=150
     )
+    avatar = models.ImageField(
+        'Аватар',
+        upload_to='avatars/',
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
