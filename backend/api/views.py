@@ -40,7 +40,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all().order_by('-pub_date')
     permission_classes = [IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['tags', 'author']
+    filterset_class = RecipeFilter
     search_fields = ['name']
 
     def get_serializer_class(self):
@@ -128,12 +128,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         return response
 
+    @action(
+        detail=True,
+        methods=['get'],
+        permission_classes=[permissions.AllowAny]
+    )
+    def get_link(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        # Возвращаем URL рецепта
+        from django.urls import reverse
+        from django.contrib.sites.shortcuts import get_current_site
+        current_site = get_current_site(request)
+        recipe_url = f"https://{current_site.domain}/recipes/{recipe.id}/"
+        return Response({'url': recipe_url})
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
     permission_classes = [permissions.AllowAny]
-    pagination_class = None
 
     @action(
         detail=True,
@@ -175,3 +188,47 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             self.get_paginated_response(serializer.data)
             if page else Response(serializer.data)
         )
+
+    @action(
+        detail=False,
+        methods=['post', 'put', 'delete'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='me/avatar'
+    )
+    def avatar(self, request):
+        user = request.user
+        if request.method in ['POST', 'PUT']:
+            # Проверяем, есть ли файл в запросе
+            if 'avatar' in request.FILES:
+                user.avatar = request.FILES['avatar']
+                user.save()
+                return Response(
+                    UserListSerializer(user, context={'request': request}).data,
+                    status=status.HTTP_200_OK
+                )
+            # Проверяем, есть ли данные в JSON
+            elif request.data and 'avatar' in request.data:
+                # Если фронтенд отправляет base64 изображение
+                from drf_base64.fields import Base64ImageField
+                avatar_field = Base64ImageField()
+                try:
+                    user.avatar = avatar_field.to_internal_value(request.data['avatar'])
+                    user.save()
+                    return Response(
+                        UserListSerializer(user, context={'request': request}).data,
+                        status=status.HTTP_200_OK
+                    )
+                except Exception as e:
+                    return Response(
+                        {'detail': f'Ошибка обработки изображения: {str(e)}'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                return Response(
+                    {'detail': 'Файл аватара не найден.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        if user.avatar:
+            user.avatar.delete()
+            user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
