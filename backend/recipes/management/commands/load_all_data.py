@@ -19,6 +19,12 @@ class Command(BaseCommand):
             os.makedirs(recipes_media_dir)
             self.stdout.write(f'Создана папка для рецептов: {recipes_media_dir}')
         
+        # Создаём папку для аватаров
+        avatars_media_dir = os.path.join(media_dir, 'avatars')
+        if not os.path.exists(avatars_media_dir):
+            os.makedirs(avatars_media_dir)
+            self.stdout.write(f'Создана папка для аватаров: {avatars_media_dir}')
+        
         # Загружаем теги
         self.stdout.write('Загружаем теги...')
         call_command('load_tags')
