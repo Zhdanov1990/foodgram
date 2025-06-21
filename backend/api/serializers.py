@@ -45,7 +45,7 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'username',
             'first_name', 'last_name',
-            'is_subscribed'
+            'avatar', 'is_subscribed'
         )
 
     def get_is_subscribed(self, obj):
@@ -62,7 +62,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'username',
             'first_name', 'last_name',
-            'password'
+            'avatar', 'password'
         )
 
     def validate_password(self, password):
@@ -137,6 +137,24 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
 
+    def validate_image(self, value):
+        if value:
+            print(f"DEBUG: Validating image - size: {getattr(value, 'size', 'unknown')}, type: {getattr(value, 'content_type', 'unknown')}")
+            
+            # Проверяем размер файла (10MB)
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError(
+                    'Размер изображения не должен превышать 10MB.'
+                )
+            
+            # Проверяем формат файла
+            allowed_formats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            if hasattr(value, 'content_type') and value.content_type not in allowed_formats:
+                raise serializers.ValidationError(
+                    'Поддерживаются только форматы: JPEG, PNG, GIF.'
+                )
+        return value
+
     def validate(self, data):
         ingredients = data.get('ingredients', [])
         if not ingredients:
@@ -147,6 +165,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        print(f"DEBUG: Creating recipe with data: {validated_data.keys()}")
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(
@@ -160,6 +179,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 ingredient_id=item['id'],
                 amount=item['amount']
             )
+        print(f"DEBUG: Recipe created successfully with ID: {recipe.id}")
         return recipe
 
     def update(self, instance, validated_data):

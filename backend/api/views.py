@@ -247,6 +247,15 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                         format, imgstr = avatar_data.split(';base64,')
                         ext = format.split('/')[-1]
                         
+                        # Проверяем размер файла
+                        import sys
+                        decoded_size = len(base64.b64decode(imgstr))
+                        if decoded_size > 10 * 1024 * 1024:  # 10MB
+                            return Response(
+                                {'detail': 'Размер изображения не должен превышать 10MB'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        
                         # Создаем файл из base64
                         avatar_file = ContentFile(base64.b64decode(imgstr), name=f'avatar.{ext}')
                         user.avatar = avatar_file
