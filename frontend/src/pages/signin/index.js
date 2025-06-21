@@ -18,7 +18,7 @@ const SignIn = ({ onSignIn, submitError, setSubmitError }) => {
   const authContext = useContext(AuthContext);
 
   const onChange = (e) => {
-    setSubmitError({ submitError: "" });
+    setSubmitError("");
     handleChange(e);
   };
 
