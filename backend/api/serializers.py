@@ -168,6 +168,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         print(f"DEBUG: Creating recipe with data: {validated_data.keys()}")
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
+        # Убираем author из validated_data, если он там есть
+        validated_data.pop('author', None)
         recipe = Recipe.objects.create(
             **validated_data,
             author=self.context['request'].user
