@@ -26,6 +26,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -34,6 +35,14 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
+    pagination_class = None
+    
+    def get_queryset(self):
+        queryset = Ingredient.objects.all()
+        name = self.request.query_params.get('name', None)
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -42,6 +51,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
     search_fields = ['name']
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all().order_by('-pub_date')
+        # Передаем request в фильтр
+        if hasattr(self, 'filterset_class'):
+            self.filterset = self.filterset_class(
+                self.request.GET,
+                queryset=queryset,
+                request=self.request
+            )
+            queryset = self.filterset.qs
+        return queryset
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -157,9 +178,16 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         author = get_object_or_404(User, pk=pk)
         user = request.user
         if request.method == 'POST':
-            if (user == author or
-                    Subscription.objects.filter(user=user, author=author).exists()):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if user == author:
+                return Response(
+                    {'detail': 'Нельзя подписаться на самого себя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if Subscription.objects.filter(user=user, author=author).exists():
+                return Response(
+                    {'detail': 'Уже подписаны на этого автора.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             sub = Subscription.objects.create(user=user, author=author)
             return Response(
                 SubscriptionSerializer(
@@ -206,18 +234,33 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                     UserListSerializer(user, context={'request': request}).data,
                     status=status.HTTP_200_OK
                 )
-            # Проверяем, есть ли данные в JSON
+            # Проверяем, есть ли данные в JSON (base64)
             elif request.data and 'avatar' in request.data:
-                # Если фронтенд отправляет base64 изображение
-                from drf_base64.fields import Base64ImageField
-                avatar_field = Base64ImageField()
                 try:
-                    user.avatar = avatar_field.to_internal_value(request.data['avatar'])
-                    user.save()
-                    return Response(
-                        UserListSerializer(user, context={'request': request}).data,
-                        status=status.HTTP_200_OK
-                    )
+                    import base64
+                    from django.core.files.base import ContentFile
+                    
+                    # Извлекаем base64 данные
+                    avatar_data = request.data['avatar']
+                    if avatar_data.startswith('data:image'):
+                        # Убираем префикс data:image/...;base64,
+                        format, imgstr = avatar_data.split(';base64,')
+                        ext = format.split('/')[-1]
+                        
+                        # Создаем файл из base64
+                        avatar_file = ContentFile(base64.b64decode(imgstr), name=f'avatar.{ext}')
+                        user.avatar = avatar_file
+                        user.save()
+                        
+                        return Response(
+                            UserListSerializer(user, context={'request': request}).data,
+                            status=status.HTTP_200_OK
+                        )
+                    else:
+                        return Response(
+                            {'detail': 'Неверный формат изображения'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 except Exception as e:
                     return Response(
                         {'detail': f'Ошибка обработки изображения: {str(e)}'},
