@@ -33,7 +33,11 @@ services:
       - media_volume:/app/media
 
   frontend:
-    image: zhdanova686/foodgram_frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - API_URL=http://158.160.26.203:8001
     container_name: infra_frontend
     restart: "no"
     volumes:

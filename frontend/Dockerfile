@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package.json .
 RUN npm install --legacy-peer-deps
 COPY . .
+ARG API_URL=http://localhost
+ENV API_URL=$API_URL
 RUN npm run build
 
 FROM alpine

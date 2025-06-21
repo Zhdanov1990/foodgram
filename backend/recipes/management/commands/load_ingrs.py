@@ -10,8 +10,8 @@ class Command(BaseCommand):
     help = 'Загружает ингредиенты из файлов data/ingredients.json и data/ingredients.csv'
 
     def handle(self, *args, **kwargs):
-        # Путь к папке data (относительно корня проекта)
-        data_dir = os.path.join(settings.BASE_DIR, '..', 'data')
+        # Путь к папке data (теперь в папке backend)
+        data_dir = os.path.join(settings.BASE_DIR, 'data')
         created_count = 0
         
         # Загружаем из JSON файла
