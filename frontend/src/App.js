@@ -7,7 +7,7 @@ import api from "./api";
 import styles from "./styles.module.css";
 
 import {
-  About,
+  // About,
   Main,
   Cart,
   SignIn,
@@ -22,7 +22,7 @@ import {
   NotFound,
   UpdateAvatar,
   ResetPassword,
-  Technologies,
+  // Technologies,
 } from "./pages";
 
 import { AuthContext, UserContext } from "./contexts";
@@ -205,6 +205,14 @@ function App() {
     }
   }, []);
 
+  // useEffect(() => {
+  //   document.addEventListener('keydown', function(event) {
+  //     if (event.ctrlKey && event.shiftKey && event.key === 'z') {
+  //       alert('зиги - добар пас!');
+  //     }
+  //   });
+  // }, [])
+
   if (loggedIn === null) {
     return <div className={styles.loading}>Загрузка...</div>;
   }
@@ -277,24 +285,43 @@ function App() {
               onAvatarChange={changeAvatar}
             />
 
-            <Route
-              exact
-              path="/recipes/:id"
-              component={SingleCard}
-              updateOrders={updateOrders}
-            />
-            <Route exact path="/about" component={About} />
-            <Route exact path="/technologies" component={Technologies} />
-            <Route exact path="/signin" component={SignIn} />
+            <Route exact path="/recipes/:id">
+              <SingleCard
+                loggedIn={loggedIn}
+                loadItem={loadSingleItem}
+                updateOrders={updateOrders}
+              />
+            </Route>
+
+            <Route exact path="/about">
+              <NotFound />
+              {/* <About component={About} /> */}
+            </Route>
 
             <Route exact path="/reset-password">
               <ResetPassword onPasswordReset={onPasswordReset} />
+            </Route>
+
+            <Route exact path="/technologies">
+              <NotFound />
+              {/* <Technologies component={Technologies}/> */}
             </Route>
 
             <Route exact path="/recipes">
               <Main updateOrders={updateOrders} />
             </Route>
 
+            <Route
+              exact
+              path="/signin"
+              render={() => (
+                <SignIn
+                  onSignIn={authorization}
+                  submitError={authError}
+                  setSubmitError={setAuthError}
+                />
+              )}
+            />
             <Route exact path="/signup">
               <SignUp
                 onSignUp={registration}
