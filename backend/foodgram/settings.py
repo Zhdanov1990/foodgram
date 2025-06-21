@@ -142,6 +142,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://foodgram-menu.zapto.org",
     "http://158.160.26.203",
     "http://158.160.26.203:8080",
+    "https://158.160.26.203:8080",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -175,6 +176,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://foodgram-menu.zapto.org",
     "http://158.160.26.203",
     "http://158.160.26.203:8080",
+    "https://158.160.26.203:8080",
 ]
 
 CSRF_COOKIE_SECURE = False

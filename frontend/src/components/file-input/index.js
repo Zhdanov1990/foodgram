@@ -28,7 +28,7 @@ const FileInput = ({
     if (fileSize && ((file.size / 1000) > fileSize)) {
       return alert(`Загрузите файл размером не более ${fileSize / 1000}Мб`)
     }
-    if (fileTypes && !fileTypes.includes(file.type)) {
+    if (fileTypes && !fileTypes.some(type => file.type === type || file.name.toLowerCase().endsWith(type.split('/')[1]))) {
       return alert(`Загрузите файл одного из типов: ${fileTypes.join(', ')}`)
     }
     reader.readAsDataURL(file);
