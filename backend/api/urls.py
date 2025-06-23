@@ -17,12 +17,12 @@ router.register('recipes', RecipeViewSet, basename='recipes')
 router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
+    # Кастомные URL должны быть ПЕРЕД роутером
+    path('recipes/favorites/', RecipeViewSet.as_view({'get': 'favorites'}), name='recipe-favorites'),
+    path('users/subscriptions/', UserViewSet.as_view({'get': 'subscriptions'}), name='user-subscriptions'),
+    path('users/<int:pk>/subscribe/', UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}), name='user-subscribe'),
+    path('users/me/avatar/', UserViewSet.as_view({'post': 'avatar', 'put': 'avatar', 'delete': 'avatar'}), name='user-avatar'),
+    
     path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
-    # Кастомные URL для подписок и аватаров
-    path('users/<int:pk>/subscribe/', UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}), name='user-subscribe'),
-    path('users/subscriptions/', UserViewSet.as_view({'get': 'subscriptions'}), name='user-subscriptions'),
-    path('users/me/avatar/', UserViewSet.as_view({'post': 'avatar', 'put': 'avatar', 'delete': 'avatar'}), name='user-avatar'),
-    # URL для избранных рецептов
-    path('recipes/favorites/', RecipeViewSet.as_view({'get': 'favorites'}), name='recipe-favorites'),
 ]

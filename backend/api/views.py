@@ -7,6 +7,7 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from djoser.views import UserViewSet as DjoserUserViewSet
+from djoser import permissions as djoser_permissions
 
 from api.filters import RecipeFilter
 from api.pagination import CustomPagination
@@ -48,15 +49,15 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all().order_by('-pub_date')
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthorOrAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
     search_fields = ['name']
 
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated()]
-        return [permissions.IsAuthenticatedOrReadOnly()]
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
 
     def get_queryset(self):
         queryset = Recipe.objects.all().order_by('-pub_date')
@@ -69,11 +70,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
             queryset = self.filterset.qs
         return queryset
-
-    def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
-            return RecipeReadSerializer
-        return RecipeWriteSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -193,15 +189,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [djoser_permissions.CurrentUserOrAdminOrReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
-        return UserListSerializer
+        elif self.action == 'me':
+            return UserListSerializer
+        return super().get_serializer_class()
 
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ['create', 'list', 'retrieve']:
             return [permissions.AllowAny()]
         return super().get_permissions()
 
