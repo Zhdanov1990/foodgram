@@ -163,6 +163,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe_url = f"https://{current_site.domain}/recipes/{recipe.id}/"
         return Response({'url': recipe_url})
 
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def favorites(self, request):
+        """Получение избранных рецептов пользователя."""
+        user = request.user
+        favorites = Recipe.objects.filter(in_favorites__user=user).order_by('-pub_date')
+        page = self.paginate_queryset(favorites)
+        serializer = RecipeReadSerializer(
+            page or favorites,
+            many=True,
+            context={'request': request}
+        )
+        return (
+            self.get_paginated_response(serializer.data)
+            if page else Response(serializer.data)
+        )
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()

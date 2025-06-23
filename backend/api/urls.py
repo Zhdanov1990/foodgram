@@ -23,4 +23,6 @@ urlpatterns = [
     path('users/<int:pk>/subscribe/', UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}), name='user-subscribe'),
     path('users/subscriptions/', UserViewSet.as_view({'get': 'subscriptions'}), name='user-subscriptions'),
     path('users/me/avatar/', UserViewSet.as_view({'post': 'avatar', 'put': 'avatar', 'delete': 'avatar'}), name='user-avatar'),
+    # URL для избранных рецептов
+    path('recipes/favorites/', RecipeViewSet.as_view({'get': 'favorites'}), name='recipe-favorites'),
 ]

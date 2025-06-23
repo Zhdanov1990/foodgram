@@ -57,6 +57,8 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
+    password = serializers.CharField(write_only=True)
+    
     class Meta:
         model = User
         fields = (
@@ -64,10 +66,21 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'first_name', 'last_name',
             'avatar', 'password'
         )
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'avatar': {'required': False}
+        }
 
     def validate_password(self, password):
         validators.validate_password(password)
-        return make_password(password)
+        return password
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User.objects.create_user(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
 
 def _validate_unique_ingredients(ingredients):
