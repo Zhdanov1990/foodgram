@@ -48,10 +48,15 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all().order_by('-pub_date')
-    permission_classes = [IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
     search_fields = ['name']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticatedOrReadOnly()]
 
     def get_queryset(self):
         queryset = Recipe.objects.all().order_by('-pub_date')
@@ -71,7 +76,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeWriteSerializer
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save(author=self.request.user)
 
     @action(
         detail=True,
