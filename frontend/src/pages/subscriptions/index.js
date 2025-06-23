@@ -1,4 +1,4 @@
-import { Title, Pagination, Container, Main, SubscriptionList  } from '../../components'
+import { Title, Pagination, Container, Main, Subscription } from '../../components'
 import { useSubscriptions } from '../../utils'
 import api from '../../api'
 import { useEffect } from 'react'
@@ -39,10 +39,16 @@ const SubscriptionsPage = () => {
       <Title
         title='Мои подписки'
       />
-      <SubscriptionList
-        subscriptions={subscriptions}
-        removeSubscription={removeSubscription}
-      />
+      {subscriptions.length === 0
+        ? <div>У вас нет подписок</div>
+        : subscriptions.map(subscription => (
+            <Subscription
+              key={subscription.id}
+              removeSubscription={removeSubscription}
+              {...subscription}
+            />
+          ))
+      }
       <Pagination
         count={subscriptionsCount}
         limit={6}

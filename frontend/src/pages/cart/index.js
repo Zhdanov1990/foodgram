@@ -1,4 +1,4 @@
-import { PurchaseList, Title, Container, Main, Button } from '../../components'
+import { Purchase, Title, Container, Main, Button } from '../../components'
 import styles from './styles.module.css'
 import { useRecipes } from '../../utils/index.js'
 import { useEffect, useState } from 'react'
@@ -51,11 +51,17 @@ const Cart = ({ updateOrders, orders }) => {
       </MetaTags>
       <div className={styles.cart}>
         <Title title='Список покупок' />
-        <PurchaseList
-          orders={recipes}
-          handleRemoveFromCart={handleRemoveFromCart}
-          updateOrders={updateOrders}
-        />
+        {recipes.length === 0
+          ? <div>Список покупок пуст</div>
+          : recipes.map(order => (
+              <Purchase
+                key={order.id}
+                updateOrders={updateOrders}
+                handleRemoveFromCart={handleRemoveFromCart}
+                {...order}
+              />
+            ))
+        }
         {orders > 0 && <Button
           modifier='style_dark'
           clickHandler={downloadDocument}

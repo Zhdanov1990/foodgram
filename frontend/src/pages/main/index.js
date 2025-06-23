@@ -20,7 +20,7 @@ const HomePage = ({ updateOrders }) => {
     handleAddToCart
   } = useRecipes()
 
-  const getRecipes = ({ page = 1, tags }) => {
+  const getRecipes = ({ page = 1, tags } = {}) => {
     api
       .getRecipes({ page, tags })
       .then(res => {
@@ -28,6 +28,21 @@ const HomePage = ({ updateOrders }) => {
         setRecipes(results)
         setRecipesCount(count)
       })
+  }
+
+  const handleLikeWithUpdate = ({ id, toLike }) => {
+    const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
+    method({ id }).then(() => {
+      getRecipes({ page: recipesPage, tags: tagsValue })
+    })
+  }
+
+  const handleAddToCartWithUpdate = ({ id, toAdd, callback }) => {
+    const method = toAdd ? api.addToOrders.bind(api) : api.removeFromOrders.bind(api)
+    method({ id }).then(() => {
+      getRecipes({ page: recipesPage, tags: tagsValue })
+      callback && callback(toAdd)
+    })
   }
 
   useEffect(_ => {
@@ -40,7 +55,6 @@ const HomePage = ({ updateOrders }) => {
         setTagsValue(tags.map(tag => ({ ...tag, value: true })))
       })
   }, [])
-
 
   return <Main>
     <Container>
@@ -64,8 +78,8 @@ const HomePage = ({ updateOrders }) => {
           {...card}
           key={card.id}
           updateOrders={updateOrders}
-          handleLike={handleLike}
-          handleAddToCart={handleAddToCart}
+          handleLike={handleLikeWithUpdate}
+          handleAddToCart={handleAddToCartWithUpdate}
         />)}
       </CardList>}
       <Pagination
