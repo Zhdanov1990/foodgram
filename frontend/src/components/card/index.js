@@ -22,6 +22,7 @@ const Card = ({
   const authContext = useContext(AuthContext);
   const [toLogin, setToLogin] = useState(false);
   const [whiteSpaceValue, setWhiteSpaceValue] = useState("nowrap");
+  const [toDeleteFavorite, setToDeleteFavorite] = useState(false);
 
   return (
     <div className={styles.card}>
@@ -37,6 +38,16 @@ const Card = ({
           onClose={() => {
             setToLogin(false);
           }}
+        />
+      )}
+      {toDeleteFavorite && (
+        <Popup
+          title="Вы уверены, что хотите удалить рецепт из избранного?"
+          onSubmit={() => {
+            handleLike({ id, toLike: false });
+            setToDeleteFavorite(false);
+          }}
+          onClose={() => setToDeleteFavorite(false)}
         />
       )}
       <TagsContainer tags={tags} className={styles.card__tag} />
@@ -111,7 +122,11 @@ const Card = ({
               if (!authContext) {
                 return setToLogin(true);
               }
-              handleLike({ id, toLike: Number(!is_favorited) });
+              if (is_favorited) {
+                setToDeleteFavorite(true);
+              } else {
+                handleLike({ id, toLike: true });
+              }
             }}
             className={cn(styles["card__save-button"], {
               [styles["card__save-button_active"]]: is_favorited,

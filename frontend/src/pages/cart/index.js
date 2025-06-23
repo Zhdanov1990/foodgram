@@ -25,6 +25,15 @@ const Cart = ({ updateOrders, orders }) => {
       })
   }
 
+  const handleRemoveFromCart = (params) => {
+    handleAddToCart({
+      ...params,
+      callback: () => {
+        getRecipes()
+      }
+    })
+  }
+
   useEffect(_ => {
     getRecipes()
   }, [])
@@ -44,7 +53,7 @@ const Cart = ({ updateOrders, orders }) => {
         <Title title='Список покупок' />
         <PurchaseList
           orders={recipes}
-          handleRemoveFromCart={handleAddToCart}
+          handleRemoveFromCart={handleRemoveFromCart}
           updateOrders={updateOrders}
         />
         {orders > 0 && <Button

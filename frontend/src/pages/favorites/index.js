@@ -1,7 +1,7 @@
-import { Card, Title, Pagination, CardList, Container, Main, CheckboxGroup  } from '../../components'
+import { Card, Title, Pagination, CardList, Container, Main, CheckboxGroup, Popup } from '../../components'
 import styles from './styles.module.css'
 import { useRecipes } from '../../utils/index.js'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import api from '../../api'
 import MetaTags from 'react-meta-tags'
 
@@ -19,8 +19,9 @@ const Favorites = ({ updateOrders }) => {
     handleLike,
     handleAddToCart
   } = useRecipes()
-  
-  const getRecipes = ({ page = 1, tags }) => {
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
+
+  const getRecipes = ({ page = 1, tags } = {}) => {
     api
       .getRecipes({ page, is_favorited: Number(true), tags })
       .then(res => {
@@ -28,6 +29,14 @@ const Favorites = ({ updateOrders }) => {
         setRecipes(results)
         setRecipesCount(count)
       })
+  }
+
+  const handleLikeWithUpdate = ({ id, toLike }) => {
+    const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
+    method({ id }).then(() => {
+      getRecipes({ page: recipesPage, tags: tagsValue })
+      setPendingDeleteId(null)
+    })
   }
 
   useEffect(_ => {
@@ -40,7 +49,6 @@ const Favorites = ({ updateOrders }) => {
         setTagsValue(tags.map(tag => ({ ...tag, value: true })))
       })
   }, [])
-
 
   return <Main>
     <Container>
@@ -64,7 +72,13 @@ const Favorites = ({ updateOrders }) => {
           {...card}
           key={card.id}
           updateOrders={updateOrders}
-          handleLike={handleLike}
+          handleLike={({ id, toLike }) => {
+            if (!toLike && card.is_favorited) {
+              setPendingDeleteId(id)
+            } else {
+              handleLikeWithUpdate({ id, toLike })
+            }
+          }}
           handleAddToCart={handleAddToCart}
         />)}
       </CardList>}
@@ -74,6 +88,13 @@ const Favorites = ({ updateOrders }) => {
         page={recipesPage}
         onPageChange={page => setRecipesPage(page)}
       />
+      {pendingDeleteId && (
+        <Popup
+          title='Вы уверены, что хотите удалить рецепт из избранного?'
+          onSubmit={() => handleLikeWithUpdate({ id: pendingDeleteId, toLike: false })}
+          onClose={() => setPendingDeleteId(null)}
+        />
+      )}
     </Container>
   </Main>
 }
