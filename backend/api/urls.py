@@ -14,11 +14,11 @@ router = DefaultRouter()
 router.register('tags', TagViewSet, basename='tags')
 router.register('ingredients', IngredientViewSet, basename='ingredients')
 router.register('recipes', RecipeViewSet, basename='recipes')
+router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
-    path('users/', include('djoser.urls')),
     # Кастомные URL для подписок и аватаров
     path('users/<int:pk>/subscribe/', UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}), name='user-subscribe'),
     path('users/subscriptions/', UserViewSet.as_view({'get': 'subscriptions'}), name='user-subscriptions'),

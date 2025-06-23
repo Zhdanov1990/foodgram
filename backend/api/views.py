@@ -6,13 +6,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from djoser.views import UserViewSet as DjoserUserViewSet
 
 from api.filters import RecipeFilter
 from api.pagination import CustomPagination
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly
 from api.serializers import (
     IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer,
-    SubscriptionSerializer, TagSerializer, UserListSerializer
+    SubscriptionSerializer, TagSerializer, UserListSerializer, UserCreateSerializer
 )
 from recipes.models import (
     Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
@@ -184,10 +185,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserCreateSerializer
+        return UserListSerializer
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        return super().get_permissions()
 
     @action(
         detail=True,
@@ -304,3 +315,29 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             user.avatar.delete()
             user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get', 'put', 'patch'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def me(self, request):
+        """Получение и обновление текущего пользователя."""
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data)
+        elif request.method in ['PUT', 'PATCH']:
+            serializer = self.get_serializer(request.user, data=request.data, partial=request.method == 'PATCH')
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[permissions.AllowAny]
+    )
+    def activation(self, request):
+        """Активация пользователя."""
+        # Простая заглушка для активации
+        return Response({'detail': 'Активация не требуется'}, status=status.HTTP_200_OK)
