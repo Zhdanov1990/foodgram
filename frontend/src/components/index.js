@@ -21,7 +21,9 @@ import Checkbox from './checkbox'
 import CheckboxGroup from './checkbox-group'
 import Pagination from './pagination'
 import Purchase from './purchase'
+import PurchaseList from './purchase-list'
 import Subscription from './subscription'
+import SubscriptionList from './subscription-list'
 import FileInput from './file-input'
 import IngredientsSearch from './ingredients-search'
 import FormTitle from './form-title'
@@ -61,7 +63,9 @@ export {
   CheckboxGroup,
   Pagination,
   Purchase,
+  PurchaseList,
   Subscription,
+  SubscriptionList,
   FileInput,
   IngredientsSearch
 }

@@ -41,7 +41,7 @@ const UpdateAvatar = ({
             setUpdated(true)
             setAvatarFile(file)
           }}
-          fileTypes={["image/png", "image/jpeg", "image/jpg"]}
+          fileTypes={["image/png", "image/jpeg"]}
           fileSize={5000}
           className={styles.fileInput}
           file={avatarFile}

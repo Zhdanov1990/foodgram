@@ -311,17 +311,13 @@ function App() {
               <Main updateOrders={updateOrders} />
             </Route>
 
-            <Route
-              exact
-              path="/signin"
-              render={() => (
-                <SignIn
-                  onSignIn={authorization}
-                  submitError={authError}
-                  setSubmitError={setAuthError}
-                />
-              )}
-            />
+            <Route exact path="/signin">
+              <SignIn
+                onSignIn={authorization}
+                submitError={authError}
+                setSubmitError={setAuthError}
+              />
+            </Route>
             <Route exact path="/signup">
               <SignUp
                 onSignUp={registration}

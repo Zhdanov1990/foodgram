@@ -128,9 +128,7 @@ const RecipeCreate = ({ onEdit }) => {
           className={styles.form}
           onSubmit={(e) => {
             e.preventDefault();
-            console.log('Form submitted');
             if (checkIfDisabled()) {
-              console.log('Form validation failed');
               return;
             }
             const data = {
@@ -144,15 +142,12 @@ const RecipeCreate = ({ onEdit }) => {
               cooking_time: recipeTime,
               image: recipeFile,
             };
-            console.log('Sending data:', data);
             api
               .createRecipe(data)
               .then((res) => {
-                console.log('Recipe created:', res);
                 history.push(`/recipes/${res.id}`);
               })
               .catch((err) => {
-                console.error('Error creating recipe:', err);
                 const { non_field_errors, ingredients, cooking_time } = err;
                 if (non_field_errors) {
                   return setSubmitError({
@@ -330,7 +325,7 @@ const RecipeCreate = ({ onEdit }) => {
             onChange={(file) => {
               setRecipeFile(file);
             }}
-            fileTypes={["image/png", "image/jpeg", "image/jpg"]}
+            fileTypes={["image/png", "image/jpeg"]}
             fileSize={5000}
             className={styles.fileInput}
             label="Загрузить фото"
