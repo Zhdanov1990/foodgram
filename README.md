@@ -131,7 +131,7 @@ docker compose exec backend python manage.py collectstatic --noinput
 
 ## Документация API
 
-API документация доступна по адресу: `http://localhost/api/docs/` (Swagger UI)
+API документация доступна по адресу: `http://localhost/api/docs/`
 
 ## Автор
 
