@@ -168,7 +168,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         from django.conf import settings
-
         domain = getattr(settings, 'DOMAIN_NAME', 'localhost')
         recipe_url = f"https://{domain}/recipes/{recipe.id}/"
 

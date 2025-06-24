@@ -37,9 +37,9 @@ const SingleCard = ({ loadItem, updateOrders }) => {
   const handleCopyLink = () => {
     api
       .copyRecipeLink({ id })
-      .then(({ "short-link": shortLink }) => {
+      .then(({ url }) => {
         navigator.clipboard
-          .writeText(shortLink)
+          .writeText(url)
           .then(() => {
             setNotificationPosition("40px");
             setTimeout(() => {
@@ -52,7 +52,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
              * поэтому добавил отдельную плашку на этот случай
              */
             setNotificationError({
-              text: `Ваша ссылка: ${shortLink}`,
+              text: `Ваша ссылка: ${url}`,
               position: "40px",
             });
           });
