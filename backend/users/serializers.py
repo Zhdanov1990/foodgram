@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_subscribed'
+            'is_subscribed',
         )
 
     def get_is_subscribed(self, obj):
@@ -31,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
             return False
         return Subscription.objects.filter(
             user=user,
-            author=obj
+            author=obj,
         ).exists()
 
 
@@ -39,12 +39,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
         required=True,
-        style={'input_type': 'password'}
+        style={'input_type': 'password'},
     )
     password_confirm = serializers.CharField(
         write_only=True,
         required=True,
-        style={'input_type': 'password'}
+        style={'input_type': 'password'},
     )
 
     class Meta:
@@ -56,50 +56,51 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'password',
-            'password_confirm'
+            'password_confirm',
         )
 
     def validate(self, data):
         if data['password'] != data['password_confirm']:
-            raise serializers.ValidationError(
-                {'password_confirm': 'Пароли не совпадают'}
-            )
+            raise serializers.ValidationError({
+                'password_confirm': 'Пароли не совпадают'
+            })
         try:
             validate_password(data['password'])
         except ValidationError as e:
-            raise serializers.ValidationError({'password': list(e.messages)})
+            raise serializers.ValidationError({
+                'password': list(e.messages)
+            })
         return data
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
-        user = User.objects.create_user(**validated_data)
-        return user
+        return User.objects.create_user(**validated_data)
 
 
 class UserSetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(
         write_only=True,
         required=True,
-        style={'input_type': 'password'}
+        style={'input_type': 'password'},
     )
     current_password = serializers.CharField(
         write_only=True,
         required=True,
-        style={'input_type': 'password'}
+        style={'input_type': 'password'},
     )
 
     def validate(self, data):
         user = self.context['request'].user
         if not user.check_password(data['current_password']):
-            raise serializers.ValidationError(
-                {'current_password': 'Неверный текущий пароль'}
-            )
+            raise serializers.ValidationError({
+                'current_password': 'Неверный текущий пароль'
+            })
         try:
             validate_password(data['new_password'])
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {'new_password': list(e.messages)}
-            )
+            raise serializers.ValidationError({
+                'new_password': list(e.messages)
+            })
         return data
 
     def update(self, instance, validated_data):
@@ -134,13 +135,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             'last_name',
             'is_subscribed',
             'recipes',
-            'recipes_count'
+            'recipes_count',
         )
         validators = [
             UniqueTogetherValidator(
                 queryset=Subscription.objects.all(),
                 fields=['user', 'author'],
-                message='Вы уже подписаны на этого пользователя'
+                message='Вы уже подписаны на этого пользователя',
             )
         ]
 
@@ -149,11 +150,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        recipes_limit = request.query_params.get('recipes_limit')
-        recipes = obj.author.recipes.all()
-        if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
-        return RecipeMinifiedSerializer(recipes, many=True).data
+        limit = request.query_params.get('recipes_limit')
+        qs = obj.author.recipes.all()
+        if limit:
+            qs = qs[:int(limit)]
+        return RecipeMinifiedSerializer(qs, many=True).data
 
     def get_recipes_count(self, obj):
-        return obj.author.recipes.count() 
+        return obj.author.recipes.count()

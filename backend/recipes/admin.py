@@ -4,10 +4,12 @@ from .models import (
     RecipeIngredient, Favorite, ShoppingCart
 )
 
+
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
     min_num = 1
     extra = 1
+
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -21,11 +23,13 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.in_favorites.count()
     favorites_count.short_description = 'Добавлено в избранное'
 
+
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'slug')
     search_fields = ('name',)
     list_filter = ('name',)
+
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
@@ -33,13 +37,16 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('name',)
 
+
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('recipe', 'ingredient', 'amount')
 
+
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
+
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):

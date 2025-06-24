@@ -17,7 +17,7 @@ router.register('recipes', RecipeViewSet, basename='recipes')
 router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
-    # Кастомные URL должны быть ПЕРЕД роутером
+
     path(
         'recipes/favorites/',
         RecipeViewSet.as_view({'get': 'favorites'}),
@@ -35,10 +35,13 @@ urlpatterns = [
     ),
     path(
         'users/me/avatar/',
-        UserViewSet.as_view({'post': 'avatar', 'put': 'avatar', 'delete': 'avatar'}),
+        UserViewSet.as_view({
+            'post': 'avatar',
+            'put': 'avatar',
+            'delete': 'avatar'
+        }),
         name='user-avatar'
     ),
-    
     path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
 ]

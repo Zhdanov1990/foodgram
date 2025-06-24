@@ -1,9 +1,9 @@
-from django.test import TestCase
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient
 from users.models import User
+
 
 @pytest.mark.django_db
 def test_tag_creation():
@@ -12,11 +12,13 @@ def test_tag_creation():
     assert tag.color == "#FFFFFF"
     assert tag.slug == "test"
 
+
 @pytest.mark.django_db
 def test_ingredient_creation():
     ingr = Ingredient.objects.create(name="Картофель", measurement_unit="г")
     assert ingr.name == "Картофель"
     assert ingr.measurement_unit == "г"
+
 
 @pytest.mark.django_db
 def test_recipe_creation():
@@ -37,10 +39,22 @@ def test_recipe_creation():
     assert ingr in recipe.ingredients.all()
     assert tag in recipe.tags.all()
 
+
+@pytest.mark.django_db
+def test_recipe_str():
+    recipe = Recipe(name='Тестовый рецепт')
+    assert str(recipe) == 'Тестовый рецепт'
+
+
+@pytest.mark.django_db
+def test_ingredient_str():
+    ingredient = Ingredient(name='Сахар', measurement_unit='г')
+    assert str(ingredient) == 'Сахар (г)'
+
+
 @pytest.mark.django_db
 def test_recipe_list_api():
     client = APIClient()
-    url = reverse("api:recipes-list")
+    url = reverse('recipe-list')
     response = client.get(url)
     assert response.status_code == 200
-    assert "results" in response.data

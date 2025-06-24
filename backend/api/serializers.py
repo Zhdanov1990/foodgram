@@ -1,9 +1,6 @@
 import django.contrib.auth.password_validation as validators
 
 from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.hashers import make_password
-from django.shortcuts import get_object_or_404
-
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -163,8 +160,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                     'Размер изображения не должен превышать 10MB.'
                 )
             # Проверяем формат файла
-            allowed_formats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-            if hasattr(value, 'content_type') and value.content_type not in allowed_formats:
+            allowed_formats = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif'
+            ]
+            if (
+                hasattr(value, 'content_type')
+                and value.content_type not in allowed_formats
+            ):
                 raise serializers.ValidationError(
                     'Поддерживаются только форматы: JPEG, PNG, GIF.'
                 )
@@ -224,15 +226,15 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         return (
-            user.is_authenticated and
-            Favorite.objects.filter(user=user, recipe=obj).exists()
+            user.is_authenticated
+            and Favorite.objects.filter(user=user, recipe=obj).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         return (
-            user.is_authenticated and
-            ShoppingCart.objects.filter(user=user, recipe=obj).exists()
+            user.is_authenticated
+            and ShoppingCart.objects.filter(user=user, recipe=obj).exists()
         )
 
 

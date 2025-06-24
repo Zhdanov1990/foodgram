@@ -1,5 +1,3 @@
-# backend/api/views.py
-
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http import HttpResponse
@@ -173,7 +171,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe_url = f"https://{domain}/recipes/{recipe.id}/"
 
         return Response({'url': recipe_url})
-
 
     @action(
         detail=False,
