@@ -12,3 +12,4 @@ python-dotenv==1.1.0
 Pillow==11.2.1
 pytest
 pytest-django
+flake8

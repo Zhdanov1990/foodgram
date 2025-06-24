@@ -2,7 +2,7 @@ from django.test import TestCase
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
-from recipes.models import Tag, Ingredient, Recipe
+from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient
 from users.models import User
 
 @pytest.mark.django_db
@@ -30,7 +30,7 @@ def test_recipe_creation():
         text="Описание",
         cooking_time=10
     )
-    recipe.ingredients.add(ingr)
+    RecipeIngredient.objects.create(recipe=recipe, ingredient=ingr, amount=100)
     recipe.tags.add(tag)
     assert recipe.name == "Тестовый рецепт"
     assert recipe.author == user

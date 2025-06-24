@@ -50,6 +50,11 @@ jobs:
         run: |
           python backend/manage.py migrate
 
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 backend/
+
       - name: Run tests
         run: |
           pytest backend/
