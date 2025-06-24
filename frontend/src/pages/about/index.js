@@ -12,38 +12,21 @@ const About = ({ updateOrders, orders }) => {
     </MetaTags>
     
     <Container>
-      <h1 className={styles.title}>Привет!</h1>
       <div className={styles.content}>
         <div>
-          <h2 className={styles.subtitle}>Что это за сайт?</h2>
           <div className={styles.text}>
             <p className={styles.textItem}>
               Представляю вам проект, созданный во время обучения в Яндекс Практикуме. Этот проект - часть учебного курса, но он создан полностью самостоятельно.
             </p>
             <p className={styles.textItem}>
-              Цель этого сайта - дать возможность пользователям создавать и хранить рецепты на онлайн-платформе. Кроме того, можно скачать список продуктов, необходимых для
-              приготовления блюда, просмотреть рецепты друзей и добавить любимые рецепты в список избранных.
+              Цель этого сайта - дать возможность пользователям создавать и хранить рецепты на онлайн-платформе. Кроме того, можно скачать список продуктов, необходимых для приготовления блюда, просмотреть рецепты друзей и добавить любимые рецепты в список избранных.
             </p>
             <p className={styles.textItem}>
               Заходите и делитесь своими любимыми рецептами!
             </p>
           </div>
         </div>
-        <aside>
-          <h2 className={styles.additionalTitle}>
-            Ссылки
-          </h2>
-          <div className={styles.text}>
-            <p className={styles.textItem}>
-              Код проекта находится тут - <a href="https://github.com/Zhdanov1990/foodgram" target="_blank" rel="noopener noreferrer" className={styles.textLink}>Github</a>
-            </p>
-            <p className={styles.textItem}>
-              Автор проекта: <a href="https://github.com/Zhdanov1990" target="_blank" rel="noopener noreferrer" className={styles.textLink}>Сергей Жданов</a>
-            </p>
-          </div>
-        </aside>
       </div>
-      
     </Container>
   </Main>
 }
