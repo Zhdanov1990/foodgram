@@ -1,10 +1,11 @@
-from django.core.management.base import BaseCommand
-from django.core.management import call_command
-from django.conf import settings
 import os
 
+from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.core.management import call_command
+
 class Command(BaseCommand):
-    help = 'Загружает все необходимые данные: теги, ингредиенты и тестовые данные'
+    help = 'Загружает все необходимые данные: теги и ингредиенты'
 
     def handle(self, *args, **options):
         # Создаём папку media если её нет
@@ -32,9 +33,5 @@ class Command(BaseCommand):
         # Загружаем ингредиенты
         self.stdout.write('Загружаем ингредиенты...')
         call_command('load_ingrs')
-        
-        # Загружаем тестовые данные
-        self.stdout.write('Загружаем тестовые данные...')
-        call_command('load_test_data')
         
         self.stdout.write(self.style.SUCCESS('Все данные успешно загружены!')) 
