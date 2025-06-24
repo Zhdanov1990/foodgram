@@ -192,6 +192,9 @@ CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
+DOMAIN_NAME = os.getenv('DOMAIN_NAME', 'localhost')
+
+
 # Настройки для изображений
 FILE_UPLOAD_HANDLERS = [
     'django.core.files.uploadhandler.MemoryFileUploadHandler',
@@ -203,10 +206,6 @@ MAX_UPLOAD_SIZE = 10485760
 
 # Разрешенные форматы изображений
 ALLOWED_IMAGE_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-
-# Настройки для Pillow
-from PIL import Image
-Image.MAX_IMAGE_PIXELS = None  # Убираем ограничение на размер изображения
 
 # Настройки логирования
 LOGGING = {

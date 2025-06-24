@@ -167,13 +167,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        from django.contrib.sites.shortcuts import get_current_site
-        current_site = get_current_site(request)
-        recipe_url = (
-            f"https://{current_site.domain}"
-            f"/recipes/{recipe.id}/"
-        )
+        from django.conf import settings
+
+        domain = getattr(settings, 'DOMAIN_NAME', 'localhost')
+        recipe_url = f"https://{domain}/recipes/{recipe.id}/"
+
         return Response({'url': recipe_url})
+
 
     @action(
         detail=False,
