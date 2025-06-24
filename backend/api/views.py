@@ -1,3 +1,5 @@
+# backend/api/views.py
+
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http import HttpResponse
@@ -11,13 +13,19 @@ from djoser import permissions as djoser_permissions
 
 from api.filters import RecipeFilter
 from api.pagination import CustomPagination
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly
+from api.permissions import IsAuthorOrAdminOrReadOnly
 from api.serializers import (
-    IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer,
-    SubscriptionSerializer, TagSerializer, UserListSerializer, UserCreateSerializer
+    IngredientSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer,
+    SubscriptionSerializer,
+    TagSerializer,
+    UserCreateSerializer,
+    UserListSerializer
 )
 from recipes.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
+    Favorite, Ingredient, Recipe, RecipeIngredient,
+    ShoppingCart, Tag
 )
 from users.models import Subscription
 
@@ -40,11 +48,11 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Ingredient.objects.all()
-        name = self.request.query_params.get('name', None)
+        qs = Ingredient.objects.all()
+        name = self.request.query_params.get('name')
         if name:
-            queryset = queryset.filter(name__icontains=name)
-        return queryset
+            qs = qs.filter(name__icontains=name)
+        return qs
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -64,15 +72,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeWriteSerializer
 
     def get_queryset(self):
-        queryset = Recipe.objects.all().order_by('-pub_date')
+        qs = Recipe.objects.all().order_by('-pub_date')
         if hasattr(self, 'filterset_class'):
             self.filterset = self.filterset_class(
                 self.request.GET,
-                queryset=queryset,
+                queryset=qs,
                 request=self.request
             )
-            queryset = self.filterset.qs
-        return queryset
+            qs = self.filterset.qs
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -86,20 +94,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
         if request.method == 'POST':
-            if Favorite.objects.filter(user=user, recipe=recipe).exists():
+            if Favorite.objects.filter(
+                user=user, recipe=recipe
+            ).exists():
                 return Response(
                     {'detail': 'Уже в избранном.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             Favorite.objects.create(user=user, recipe=recipe)
-            return Response(
-                RecipeReadSerializer(
-                    recipe,
-                    context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
-            )
-        # DELETE
+            data = RecipeReadSerializer(
+                recipe, context={'request': request}
+            ).data
+            return Response(data, status=status.HTTP_201_CREATED)
         Favorite.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -112,21 +118,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
         if request.method == 'POST':
-            if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            if ShoppingCart.objects.filter(
+                user=user, recipe=recipe
+            ).exists():
                 return Response(
                     {'detail': 'Уже в списке покупок.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             ShoppingCart.objects.create(user=user, recipe=recipe)
-            return Response(
-                RecipeReadSerializer(
-                    recipe,
-                    context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
-            )
-        # DELETE
-        ShoppingCart.objects.filter(user=user, recipe=recipe).delete()
+            data = RecipeReadSerializer(
+                recipe, context={'request': request}
+            ).data
+            return Response(data, status=status.HTTP_201_CREATED)
+        ShoppingCart.objects.filter(
+            user=user, recipe=recipe
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -147,21 +153,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
             for item in qs
         ]
         content = "\n".join(lines)
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
-        return response
+        resp = HttpResponse(content, content_type='text/plain')
+        resp['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"'
+        )
+        return resp
 
     @action(
         detail=True,
         methods=['get'],
-        permission_classes=[permissions.AllowAny]
+        permission_classes=[permissions.AllowAny],
+        url_path='get-link'
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        from django.urls import reverse
         from django.contrib.sites.shortcuts import get_current_site
         current_site = get_current_site(request)
-        recipe_url = f"https://{current_site.domain}/recipes/{recipe.id}/"
+        recipe_url = (
+            f"https://{current_site.domain}"
+            f"/recipes/{recipe.id}/"
+        )
         return Response({'url': recipe_url})
 
     @action(
@@ -171,17 +182,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorites(self, request):
         user = request.user
-        favorites = Recipe.objects.filter(in_favorites__user=user).order_by('-pub_date')
-        page = self.paginate_queryset(favorites)
+        favs = Recipe.objects.filter(
+            in_favorites__user=user
+        ).order_by('-pub_date')
+        page = self.paginate_queryset(favs)
         serializer = RecipeReadSerializer(
-            page or favorites,
+            page or favs,
             many=True,
             context={'request': request}
         )
-        return (
-            self.get_paginated_response(serializer.data)
-            if page else Response(serializer.data)
-        )
+        if page:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -192,7 +204,7 @@ class UserViewSet(DjoserUserViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
-        elif self.action == 'me':
+        if self.action == 'me':
             return UserListSerializer
         return super().get_serializer_class()
 
@@ -212,22 +224,23 @@ class UserViewSet(DjoserUserViewSet):
         if request.method == 'POST':
             if user == author:
                 return Response(
-                    {'detail': 'Нельзя подписаться на самого себя.'},
+                    {'detail': 'Нельзя подписаться на себя.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if Subscription.objects.filter(user=user, author=author).exists():
+            if Subscription.objects.filter(
+                user=user, author=author
+            ).exists():
                 return Response(
-                    {'detail': 'Уже подписаны на этого автора.'},
+                    {'detail': 'Уже подписаны.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            sub = Subscription.objects.create(user=user, author=author)
-            return Response(
-                SubscriptionSerializer(
-                    sub,
-                    context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
+            sub = Subscription.objects.create(
+                user=user, author=author
             )
+            data = SubscriptionSerializer(
+                sub, context={'request': request}
+            ).data
+            return Response(data, status=status.HTTP_201_CREATED)
         Subscription.objects.filter(user=user, author=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -244,10 +257,9 @@ class UserViewSet(DjoserUserViewSet):
             many=True,
             context={'request': request}
         )
-        return (
-            self.get_paginated_response(serializer.data)
-            if page else Response(serializer.data)
-        )
+        if page:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -261,42 +273,45 @@ class UserViewSet(DjoserUserViewSet):
             if 'avatar' in request.FILES:
                 user.avatar = request.FILES['avatar']
                 user.save()
-                return Response(
-                    UserListSerializer(user, context={'request': request}).data,
-                    status=status.HTTP_200_OK
-                )
-            elif request.data and 'avatar' in request.data:
+                data = UserListSerializer(
+                    user, context={'request': request}
+                ).data
+                return Response(data, status=status.HTTP_200_OK)
+            if request.data.get('avatar'):
                 try:
                     import base64
                     from django.core.files.base import ContentFile
                     avatar_data = request.data['avatar']
                     if avatar_data.startswith('data:image'):
-                        format, imgstr = avatar_data.split(';base64,')
-                        ext = format.split('/')[-1]
-                        decoded_size = len(base64.b64decode(imgstr))
-                        if decoded_size > 10 * 1024 * 1024:
+                        fmt, imgstr = avatar_data.split(';base64,')
+                        ext = fmt.split('/')[-1]
+                        size = len(base64.b64decode(imgstr))
+                        if size > 10 * 1024 * 1024:
                             return Response(
-                                {'detail': 'Размер изображения не должен превышать 10MB'},
+                                {'detail': 'Макс. размер 10MB'},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
-                        avatar_file = ContentFile(base64.b64decode(imgstr), name=f'avatar.{ext}')
+                        avatar_file = ContentFile(
+                            base64.b64decode(imgstr),
+                            name=f'avatar.{ext}'
+                        )
                         user.avatar = avatar_file
                         user.save()
-                        return Response(
-                            UserListSerializer(user, context={'request': request}).data,
-                            status=status.HTTP_200_OK
-                        )
+                        data = UserListSerializer(
+                            user, context={'request': request}
+                        ).data
+                        return Response(data)
                     return Response(
-                        {'detail': 'Неверный формат изображения'},
+                        {'detail': 'Неверный формат'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 except Exception as e:
                     return Response(
-                        {'detail': f'Ошибка обработки изображения: {str(e)}'},
+                        {'detail': str(e)},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             return Response(
-                {'detail': 'Файл аватара не найден.'},
+                {'detail': 'Файл не найден.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if user.avatar:
@@ -310,7 +325,6 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def me(self, request):
-        """Получение и обновление текущего пользователя."""
         if request.method == 'GET':
             serializer = self.get_serializer(request.user)
             return Response(serializer.data)
@@ -329,5 +343,7 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[permissions.AllowAny]
     )
     def activation(self, request):
-        """Активация пользователя."""
-        return Response({'detail': 'Активация не требуется'}, status=status.HTTP_200_OK)
+        return Response(
+            {'detail': 'Активация не требуется'},
+            status=status.HTTP_200_OK
+        )
