@@ -1,6 +1,6 @@
 import pytest
-from django.urls import reverse
 from rest_framework.test import APIClient
+from rest_framework import status
 
 from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient
 from users.models import User
@@ -80,6 +80,5 @@ def test_ingredient_str():
 @pytest.mark.django_db
 def test_recipe_list_api():
     client = APIClient()
-    url = reverse("recipes-list")
-    response = client.get(url)
-    assert response.status_code == 200
+    response = client.get("/api/recipes/")
+    assert response.status_code == status.HTTP_200_OK
