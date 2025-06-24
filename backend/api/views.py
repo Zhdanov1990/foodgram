@@ -38,7 +38,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     pagination_class = None
-    
+
     def get_queryset(self):
         queryset = Ingredient.objects.all()
         name = self.request.query_params.get('name', None)
@@ -53,15 +53,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
     search_fields = ['name']
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in [
+            'list', 'retrieve', 'favorites',
+            'download_shopping_cart', 'get_link'
+        ]:
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
     def get_queryset(self):
         queryset = Recipe.objects.all().order_by('-pub_date')
-        # Передаем request в фильтр
         if hasattr(self, 'filterset_class'):
             self.filterset = self.filterset_class(
                 self.request.GET,
@@ -96,6 +99,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 ).data,
                 status=status.HTTP_201_CREATED
             )
+        # DELETE
         Favorite.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -121,6 +125,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 ).data,
                 status=status.HTTP_201_CREATED
             )
+        # DELETE
         ShoppingCart.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -138,17 +143,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             unit=F('ingredient__measurement_unit')
         ).annotate(total=Sum('amount'))
         lines = [
-            f"{item['name']} ({item['unit']}) — {item['total']}"
+            f"{item['name']} — {item['total']} {item['unit']}"
             for item in qs
         ]
         content = "\n".join(lines)
-        response = Response(
-            content,
-            content_type='text/plain'
-        )
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"'
-        )
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
 
     @action(
@@ -158,7 +158,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        # Возвращаем URL рецепта
         from django.urls import reverse
         from django.contrib.sites.shortcuts import get_current_site
         current_site = get_current_site(request)
@@ -171,7 +170,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def favorites(self, request):
-        """Получение избранных рецептов пользователя."""
         user = request.user
         favorites = Recipe.objects.filter(in_favorites__user=user).order_by('-pub_date')
         page = self.paginate_queryset(favorites)
@@ -260,7 +258,6 @@ class UserViewSet(DjoserUserViewSet):
     def avatar(self, request):
         user = request.user
         if request.method in ['POST', 'PUT']:
-            # Проверяем, есть ли файл в запросе
             if 'avatar' in request.FILES:
                 user.avatar = request.FILES['avatar']
                 user.save()
@@ -268,52 +265,40 @@ class UserViewSet(DjoserUserViewSet):
                     UserListSerializer(user, context={'request': request}).data,
                     status=status.HTTP_200_OK
                 )
-            # Проверяем, есть ли данные в JSON (base64)
             elif request.data and 'avatar' in request.data:
                 try:
                     import base64
                     from django.core.files.base import ContentFile
-                    
-                    # Извлекаем base64 данные
                     avatar_data = request.data['avatar']
                     if avatar_data.startswith('data:image'):
-                        # Убираем префикс data:image/...;base64,
                         format, imgstr = avatar_data.split(';base64,')
                         ext = format.split('/')[-1]
-                        
-                        # Проверяем размер файла
-                        import sys
                         decoded_size = len(base64.b64decode(imgstr))
-                        if decoded_size > 10 * 1024 * 1024:  # 10MB
+                        if decoded_size > 10 * 1024 * 1024:
                             return Response(
                                 {'detail': 'Размер изображения не должен превышать 10MB'},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
-                        
-                        # Создаем файл из base64
                         avatar_file = ContentFile(base64.b64decode(imgstr), name=f'avatar.{ext}')
                         user.avatar = avatar_file
                         user.save()
-                        
                         return Response(
                             UserListSerializer(user, context={'request': request}).data,
                             status=status.HTTP_200_OK
                         )
-                    else:
-                        return Response(
-                            {'detail': 'Неверный формат изображения'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
+                    return Response(
+                        {'detail': 'Неверный формат изображения'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 except Exception as e:
                     return Response(
                         {'detail': f'Ошибка обработки изображения: {str(e)}'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-            else:
-                return Response(
-                    {'detail': 'Файл аватара не найден.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            return Response(
+                {'detail': 'Файл аватара не найден.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if user.avatar:
             user.avatar.delete()
             user.save()
@@ -329,11 +314,14 @@ class UserViewSet(DjoserUserViewSet):
         if request.method == 'GET':
             serializer = self.get_serializer(request.user)
             return Response(serializer.data)
-        elif request.method in ['PUT', 'PATCH']:
-            serializer = self.get_serializer(request.user, data=request.data, partial=request.method == 'PATCH')
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+        serializer = self.get_serializer(
+            request.user,
+            data=request.data,
+            partial=(request.method == 'PATCH')
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -342,5 +330,4 @@ class UserViewSet(DjoserUserViewSet):
     )
     def activation(self, request):
         """Активация пользователя."""
-        # Простая заглушка для активации
         return Response({'detail': 'Активация не требуется'}, status=status.HTTP_200_OK)

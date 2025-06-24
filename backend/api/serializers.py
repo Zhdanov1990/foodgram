@@ -5,7 +5,10 @@ from django.shortcuts import get_object_or_404
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, Tag,
+    Favorite, ShoppingCart
+)
 from users.models import Subscription
 
 User = get_user_model()
@@ -58,7 +61,7 @@ class UserListSerializer(serializers.ModelSerializer):
 class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
     password = serializers.CharField(write_only=True)
-    
+
     class Meta:
         model = User
         fields = (
@@ -152,14 +155,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def validate_image(self, value):
         if value:
-            print(f"DEBUG: Validating image - size: {getattr(value, 'size', 'unknown')}, type: {getattr(value, 'content_type', 'unknown')}")
-            
             # Проверяем размер файла (10MB)
             if value.size > 10 * 1024 * 1024:
                 raise serializers.ValidationError(
                     'Размер изображения не должен превышать 10MB.'
                 )
-            
             # Проверяем формат файла
             allowed_formats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
             if hasattr(value, 'content_type') and value.content_type not in allowed_formats:
@@ -178,7 +178,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        print(f"DEBUG: Creating recipe with data: {validated_data.keys()}")
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
@@ -189,7 +188,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 ingredient_id=item['id'],
                 amount=item['amount']
             )
-        print(f"DEBUG: Recipe created successfully with ID: {recipe.id}")
         return recipe
 
     def update(self, instance, validated_data):
@@ -225,14 +223,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         return (
             user.is_authenticated and
-            obj.in_favorites.filter(pk=user.pk).exists()
+            Favorite.objects.filter(user=user, recipe=obj).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         return (
             user.is_authenticated and
-            obj.in_shopping_carts.filter(pk=user.pk).exists()
+            ShoppingCart.objects.filter(user=user, recipe=obj).exists()
         )
 
 
