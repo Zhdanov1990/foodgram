@@ -35,9 +35,17 @@ class RecipeFilter(filters.FilterSet):
         return queryset
 
     def filter_tags(self, queryset, name, value):
+        print(f"=== FILTER_TAGS CALLED ===")
         print(f"Filter tags called with value: {value}")
         print(f"Value type: {type(value)}")
         if value:
             print(f"Filtering by tags: {value}")
             return queryset.filter(tags__slug__in=value).distinct()
         return queryset
+
+    def __init__(self, *args, **kwargs):
+        print(f"=== RECIPE_FILTER INIT ===")
+        print(f"Args: {args}")
+        print(f"Kwargs: {kwargs}")
+        super().__init__(*args, **kwargs)
+        print(f"=== RECIPE_FILTER INIT COMPLETE ===")

@@ -71,17 +71,32 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeWriteSerializer
 
     def get_queryset(self):
+        print(f"=== GET_QUERYSET CALLED ===")
         print(f"GET_QUERYSET: request.GET = {self.request.GET}")
+        print(f"Request path: {self.request.path}")
+        print(f"Request method: {self.request.method}")
+        
+        # Проверяем, какие теги есть в базе
+        all_tags = Tag.objects.all()
+        print(f"All tags in DB: {[tag.slug for tag in all_tags]}")
+        
         qs = Recipe.objects.all().order_by('-pub_date')
         if hasattr(self, 'filterset_class'):
             print(f"Applying filterset: {self.filterset_class}")
-            self.filterset = self.filterset_class(
-                self.request.GET,
-                queryset=qs,
-                request=self.request
-            )
-            print(f"Filterset errors: {self.filterset.errors}")
-            qs = self.filterset.qs
+            try:
+                self.filterset = self.filterset_class(
+                    self.request.GET,
+                    queryset=qs,
+                    request=self.request
+                )
+                print(f"Filterset errors: {self.filterset.errors}")
+                if self.filterset.errors:
+                    print(f"Filterset form errors: {self.filterset.form.errors}")
+                qs = self.filterset.qs
+            except Exception as e:
+                print(f"Exception in filterset: {e}")
+                import traceback
+                traceback.print_exc()
         return qs
 
     def perform_create(self, serializer):
