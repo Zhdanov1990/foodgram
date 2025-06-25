@@ -5,14 +5,21 @@ import { Icons } from '..'
 
 const Pagination = ({ count = 0, limit = 6, initialActive = 1, onPageChange, page }) => {
   const [ active, setActive ] = useState(initialActive)
+  
+  console.log('Pagination render:', { count, limit, initialActive, page, active })
+  
   const onButtonClick = (active) => {
+    console.log('Pagination button clicked:', active)
     setActive(active)
     onPageChange(active)
   }
+  
   useEffect(_ => {
+    console.log('Pagination useEffect:', { page, active })
     if (page === active) { return }
     setActive(page)
   }, [page])
+  
   const pagesCount = Math.ceil(count / limit)
   if (count === 0 || pagesCount <= 1) { return null }
   return <div className={styles.pagination}>

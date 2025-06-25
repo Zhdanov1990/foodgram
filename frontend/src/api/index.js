@@ -387,7 +387,7 @@ class Api {
           .join("")
       : "";
     const url = `/api/recipes/favorites/?page=${page}&limit=${limit}${tagsString}`;
-    console.log('API запрос избранного:', url);
+    console.log('API запрос избранного:', url, 'параметры:', { page, limit, tags });
     return fetch(url, {
       method: "GET",
       headers: {

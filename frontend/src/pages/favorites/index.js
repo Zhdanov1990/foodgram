@@ -21,7 +21,7 @@ const Favorites = ({ updateOrders }) => {
   } = useRecipes()
   
   const getRecipes = ({ page = 1, tags }) => {
-    console.log('Загружаем избранное:', { page, tags })
+    console.log('Загружаем избранное:', { page, tags, recipesPage })
     api
       .getFavorites({ page, tags })
       .then(res => {
@@ -52,6 +52,7 @@ const Favorites = ({ updateOrders }) => {
   }
 
   useEffect(_ => {
+    console.log('useEffect сработал:', { recipesPage, tagsValue })
     getRecipes({ page: recipesPage, tags: tagsValue })
   }, [recipesPage, tagsValue])
 
@@ -95,7 +96,7 @@ const Favorites = ({ updateOrders }) => {
         limit={6}
         page={recipesPage}
         onPageChange={page => {
-          console.log('Смена страницы на:', page)
+          console.log('Смена страницы на:', page, 'текущая:', recipesPage)
           setRecipesPage(page)
         }}
       />
