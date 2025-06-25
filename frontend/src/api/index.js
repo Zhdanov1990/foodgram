@@ -1,7 +1,14 @@
 class Api {
-  constructor(url, headers) {
+  constructor(url) {
     this._url = url;
-    this._headers = headers;
+  }
+
+  get _headers() {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { authorization: `Token ${token}` } : {}),
+    };
   }
 
   checkResponse(res) {
@@ -43,13 +50,9 @@ class Api {
   }
 
   signout() {
-    const token = localStorage.getItem("token");
     return fetch("/api/auth/token/logout/", {
       method: "POST",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
@@ -68,57 +71,39 @@ class Api {
   }
 
   getUserData() {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/me/`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   changePassword({ current_password, new_password }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/set_password/`, {
       method: "POST",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
       body: JSON.stringify({ current_password, new_password }),
     }).then(this.checkResponse);
   }
 
   changeAvatar({ file }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/me/avatar/`, {
       method: "PUT",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
       body: JSON.stringify({ avatar: file }),
     }).then(this.checkResponse);
   }
 
   deleteAvatar() {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/me/avatar/`, {
       method: "DELETE",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   resetPassword({ email }) {
     return fetch(`/api/users/reset_password/`, {
       method: "POST",
-      headers: {
-        ...this._headers,
-      },
+      headers: this._headers,
       body: JSON.stringify({ email }),
     }).then(this.checkResponse);
   }
@@ -133,8 +118,6 @@ class Api {
     author,
     tags,
   } = {}) {
-    const token = localStorage.getItem("token");
-    const authorization = token ? { authorization: `Token ${token}` } : {};
     const tagsString = tags
       ? tags
           .filter((tag) => tag.value)
@@ -149,23 +132,15 @@ class Api {
       }${tagsString}`,
       {
         method: "GET",
-        headers: {
-          ...this._headers,
-          ...authorization,
-        },
+        headers: this._headers,
       }
     ).then(this.checkResponse);
   }
 
   getRecipe({ recipe_id }) {
-    const token = localStorage.getItem("token");
-    const authorization = token ? { authorization: `Token ${token}` } : {};
     return fetch(`/api/recipes/${recipe_id}/`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-        ...authorization,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
@@ -177,13 +152,9 @@ class Api {
     text = "",
     ingredients = [],
   }) {
-    const token = localStorage.getItem("token");
     return fetch("/api/recipes/", {
       method: "POST",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
       body: JSON.stringify({
         name,
         image,
@@ -199,14 +170,9 @@ class Api {
     { name, recipe_id, image, tags, cooking_time, text, ingredients },
     wasImageUpdated
   ) {
-    // image was changed
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/${recipe_id}/`, {
       method: "PATCH",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
       body: JSON.stringify({
         name,
         id: recipe_id,
@@ -220,105 +186,71 @@ class Api {
   }
 
   addToFavorites({ id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/${id}/favorite/`, {
       method: "POST",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   removeFromFavorites({ id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/${id}/favorite/`, {
       method: "DELETE",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   copyRecipeLink({ id }) {
     return fetch(`/api/recipes/${id}/get-link/`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   getUser({ id }) {
-    const token = localStorage.getItem("token");
-    const authorization = token ? { authorization: `Token ${token}` } : {};
     return fetch(`/api/users/${id}/`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-        ...authorization,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   getUsers({ page = 1, limit = 6 }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/?page=${page}&limit=${limit}`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   // subscriptions
 
   getSubscriptions({ page, limit = 6, recipes_limit = 3 }) {
-    const token = localStorage.getItem("token");
     return fetch(
       `/api/users/subscriptions/?page=${page}&limit=${limit}&recipes_limit=${recipes_limit}`,
       {
         method: "GET",
-        headers: {
-          ...this._headers,
-          authorization: `Token ${token}`,
-        },
+        headers: this._headers,
       }
     ).then(this.checkResponse);
   }
 
   deleteSubscriptions({ author_id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/${author_id}/subscribe/`, {
       method: "DELETE",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   subscribe({ author_id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/users/${author_id}/subscribe/`, {
       method: "POST",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   // ingredients
   getIngredients({ name }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/ingredients/?name=${name}`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
@@ -326,60 +258,39 @@ class Api {
   getTags() {
     return fetch(`/api/tags/`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   addToOrders({ id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/${id}/shopping_cart/`, {
       method: "POST",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   removeFromOrders({ id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/${id}/shopping_cart/`, {
       method: "DELETE",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   deleteRecipe({ recipe_id }) {
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/${recipe_id}/`, {
       method: "DELETE",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 
   downloadFile() {
-    const token = localStorage.getItem("token");
     return fetch(`/api/recipes/download_shopping_cart/`, {
       method: "GET",
-      headers: {
-        ...this._headers,
-        authorization: `Token ${token}`,
-      },
+      headers: this._headers,
     }).then(this.checkFileDownloadResponse);
   }
 
   getFavorites({ page = 1, limit = 6, tags } = {}) {
-    const token = localStorage.getItem("token");
-    console.log('Токен для избранного:', token ? 'есть' : 'нет');
-    const authorization = token ? { authorization: `Token ${token}` } : {};
     const tagsString = tags
       ? tags
           .filter((tag) => tag.value)
@@ -387,17 +298,11 @@ class Api {
           .join("")
       : "";
     const url = `/api/recipes/favorites/?page=${page}&limit=${limit}${tagsString}`;
-    console.log('API запрос избранного:', url, 'параметры:', { page, limit, tags });
     return fetch(url, {
       method: "GET",
-      headers: {
-        ...this._headers,
-        ...authorization,
-      },
+      headers: this._headers,
     }).then(this.checkResponse);
   }
 }
 
-export default new Api(process.env.API_URL || "http://localhost", {
-  "content-type": "application/json",
-});
+export default new Api(process.env.API_URL || "http://localhost");
