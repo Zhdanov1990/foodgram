@@ -375,6 +375,27 @@ class Api {
       },
     }).then(this.checkFileDownloadResponse);
   }
+
+  getFavorites({ page = 1, limit = 6, tags } = {}) {
+    const token = localStorage.getItem("token");
+    console.log('Токен для избранного:', token ? 'есть' : 'нет');
+    const authorization = token ? { authorization: `Token ${token}` } : {};
+    const tagsString = tags
+      ? tags
+          .filter((tag) => tag.value)
+          .map((tag) => `&tags=${tag.slug}`)
+          .join("")
+      : "";
+    const url = `/api/recipes/favorites/?page=${page}&limit=${limit}${tagsString}`;
+    console.log('API запрос избранного:', url);
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        ...this._headers,
+        ...authorization,
+      },
+    }).then(this.checkResponse);
+  }
 }
 
 export default new Api(process.env.API_URL || "http://localhost", {

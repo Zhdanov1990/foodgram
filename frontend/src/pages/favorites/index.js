@@ -21,13 +21,34 @@ const Favorites = ({ updateOrders }) => {
   } = useRecipes()
   
   const getRecipes = ({ page = 1, tags }) => {
+    console.log('Загружаем избранное:', { page, tags })
     api
-      .getRecipes({ page, is_favorited: Number(true), tags })
+      .getFavorites({ page, tags })
       .then(res => {
+        console.log('Ответ от сервера:', res)
         const { results, count } = res
         setRecipes(results)
         setRecipesCount(count)
       })
+      .catch(err => {
+        console.error('Ошибка при получении избранного:', err)
+        setRecipes([])
+        setRecipesCount(0)
+      })
+  }
+
+  const handleLikeWithReload = ({ id, toLike = true }) => {
+    const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
+    method({ id }).then(res => {
+      // Перезагружаем данные избранного после изменения
+      getRecipes({ page: recipesPage, tags: tagsValue })
+    })
+    .catch(err => {
+      const { errors } = err
+      if (errors) {
+        alert(errors)
+      }
+    })
   }
 
   useEffect(_ => {
@@ -54,6 +75,7 @@ const Favorites = ({ updateOrders }) => {
         <CheckboxGroup
           values={tagsValue}
           handleChange={value => {
+            console.log('Изменение тегов:', value)
             setRecipesPage(1)
             handleTagsChange(value)
           }}
@@ -64,7 +86,7 @@ const Favorites = ({ updateOrders }) => {
           {...card}
           key={card.id}
           updateOrders={updateOrders}
-          handleLike={handleLike}
+          handleLike={handleLikeWithReload}
           handleAddToCart={handleAddToCart}
         />)}
       </CardList>}
@@ -72,7 +94,10 @@ const Favorites = ({ updateOrders }) => {
         count={recipesCount}
         limit={6}
         page={recipesPage}
-        onPageChange={page => setRecipesPage(page)}
+        onPageChange={page => {
+          console.log('Смена страницы на:', page)
+          setRecipesPage(page)
+        }}
       />
     </Container>
   </Main>

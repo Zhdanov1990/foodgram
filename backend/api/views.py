@@ -182,6 +182,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         favs = Recipe.objects.filter(
             in_favorites__user=user
         ).order_by('-pub_date')
+
+        if hasattr(self, 'filterset_class'):
+            self.filterset = self.filterset_class(
+                request.GET,
+                queryset=favs,
+                request=request
+            )
+            favs = self.filterset.qs
+
         page = self.paginate_queryset(favs)
         serializer = RecipeReadSerializer(
             page or favs,
