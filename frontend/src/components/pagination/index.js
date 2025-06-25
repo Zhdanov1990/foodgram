@@ -1,39 +1,26 @@
 import styles from './styles.module.css'
 import cn from 'classnames'
-import { useState, useEffect } from 'react'
 import { Icons } from '..'
 
-const Pagination = ({ count = 0, limit = 6, initialActive = 1, onPageChange, page }) => {
-  const [ active, setActive ] = useState(initialActive)
-  
-  console.log('Pagination render:', { count, limit, initialActive, page, active })
-  
-  const onButtonClick = (active) => {
-    console.log('Pagination button clicked:', active)
-    setActive(active)
-    onPageChange(active)
-  }
-  
-  useEffect(_ => {
-    console.log('Pagination useEffect:', { page, active })
-    if (page === active) { return }
-    setActive(page)
-  }, [page])
+const Pagination = ({ count = 0, limit = 6, onPageChange, page }) => {
+  console.log('Pagination render:', { count, limit, page })
   
   const pagesCount = Math.ceil(count / limit)
   if (count === 0 || pagesCount <= 1) { return null }
+  
   return <div className={styles.pagination}>
     <div
       className={cn(
         styles.arrow,
         styles.arrowLeft,
         {
-          [styles.arrowDisabled]: active === 1
+          [styles.arrowDisabled]: page === 1
         }
       )}
       onClick={_ => {
-        if (active === 1) { return }
-        onButtonClick(active - 1)
+        if (page === 1) { return }
+        console.log('Pagination: переход на страницу', page - 1)
+        onPageChange(page - 1)
       }}
     >
       <Icons.PaginationArrow />
@@ -42,10 +29,13 @@ const Pagination = ({ count = 0, limit = 6, initialActive = 1, onPageChange, pag
       return <div
         className={cn(
           styles.paginationItem, {
-            [styles.paginationItemActive]: idx + 1 === active
+            [styles.paginationItemActive]: idx + 1 === page
           }
         )}
-        onClick={_ => onButtonClick(idx + 1)}
+        onClick={_ => {
+          console.log('Pagination: переход на страницу', idx + 1)
+          onPageChange(idx + 1)
+        }}
         key={idx}
       >{idx + 1}</div>
     })}
@@ -54,12 +44,13 @@ const Pagination = ({ count = 0, limit = 6, initialActive = 1, onPageChange, pag
         styles.arrow,
         styles.arrowRight,
         {
-          [styles.arrowDisabled]: active === pagesCount
+          [styles.arrowDisabled]: page === pagesCount
         }
       )}
       onClick={_ => {
-        if (active === pagesCount) { return }
-        onButtonClick(active + 1)
+        if (page === pagesCount) { return }
+        console.log('Pagination: переход на страницу', page + 1)
+        onPageChange(page + 1)
       }}
     >
       <Icons.PaginationArrow />
