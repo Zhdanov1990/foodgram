@@ -71,13 +71,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeWriteSerializer
 
     def get_queryset(self):
+        print(f"GET_QUERYSET: request.GET = {self.request.GET}")
         qs = Recipe.objects.all().order_by('-pub_date')
         if hasattr(self, 'filterset_class'):
+            print(f"Applying filterset: {self.filterset_class}")
             self.filterset = self.filterset_class(
                 self.request.GET,
                 queryset=qs,
                 request=self.request
             )
+            print(f"Filterset errors: {self.filterset.errors}")
             qs = self.filterset.qs
         return qs
 

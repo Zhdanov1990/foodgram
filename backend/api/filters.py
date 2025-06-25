@@ -33,3 +33,11 @@ class RecipeFilter(filters.FilterSet):
         if value and self.request.user.is_authenticated:
             return queryset.filter(in_shopping_carts__user=self.request.user)
         return queryset
+
+    def filter_tags(self, queryset, name, value):
+        print(f"Filter tags called with value: {value}")
+        print(f"Value type: {type(value)}")
+        if value:
+            print(f"Filtering by tags: {value}")
+            return queryset.filter(tags__slug__in=value).distinct()
+        return queryset
