@@ -19,8 +19,13 @@ const SubscriptionsPage = () => {
     api
       .getSubscriptions({ page })
       .then(res => {
-        setSubscriptions(res.results)
-        setSubscriptionsCount(res.count)
+        setSubscriptions(Array.isArray(res.results) ? res.results : [])
+        setSubscriptionsCount(res.count || 0)
+      })
+      .catch(err => {
+        console.error('Ошибка при получении подписок:', err)
+        setSubscriptions([])
+        setSubscriptionsCount(0)
       })
   }
 

@@ -180,7 +180,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorites(self, request):
         user = request.user
         print(f"Favorites request: user={user}, GET params={request.GET}")
-        
+
         favs = Recipe.objects.filter(
             in_favorites__user=user
         ).order_by('-pub_date')
@@ -196,17 +196,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
         print(f"Favorites queryset count: {favs.count()}")
         page = self.paginate_queryset(favs)
         print(f"Pagination result: page={page is not None}")
-        
+
         serializer = RecipeReadSerializer(
             page or favs,
             many=True,
             context={'request': request}
         )
-        if page:
-            response = self.get_paginated_response(serializer.data)
-            print(f"Paginated response: count={response.data.get('count')}, results_count={len(response.data.get('results', []))}")
-            return response
-        return Response(serializer.data)
+        response = self.get_paginated_response(serializer.data)
+        print(
+            f"Paginated response: count={response.data.get('count')}, "
+            f"results_count={len(response.data.get('results', []))}"
+        )
+        return response
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -270,9 +271,7 @@ class UserViewSet(DjoserUserViewSet):
             many=True,
             context={'request': request}
         )
-        if page:
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=False,

@@ -27,8 +27,8 @@ const Favorites = ({ updateOrders }) => {
       .then(res => {
         console.log('Ответ от сервера:', res)
         const { results, count } = res
-        setRecipes(results)
-        setRecipesCount(count)
+        setRecipes(Array.isArray(results) ? results : [])
+        setRecipesCount(count || 0)
       })
       .catch(err => {
         console.error('Ошибка при получении избранного:', err)
@@ -82,15 +82,21 @@ const Favorites = ({ updateOrders }) => {
           }}
         />
       </div>
-      {recipes.length > 0 && <CardList>
-        {recipes.map(card => <Card
-          {...card}
-          key={card.id}
-          updateOrders={updateOrders}
-          handleLike={handleLikeWithReload}
-          handleAddToCart={handleAddToCart}
-        />)}
-      </CardList>}
+      {recipes.length > 0 ? (
+        <CardList>
+          {recipes.map(card => <Card
+            {...card}
+            key={card.id}
+            updateOrders={updateOrders}
+            handleLike={handleLikeWithReload}
+            handleAddToCart={handleAddToCart}
+          />)}
+        </CardList>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <p>У вас пока нет избранных рецептов</p>
+        </div>
+      )}
       <Pagination
         count={recipesCount}
         limit={6}
