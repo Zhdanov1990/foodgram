@@ -30,16 +30,15 @@ class RecipeFilter(filters.FilterSet):
     def filter_tags(self, queryset, name, value):
         if not value:
             return queryset
-        
-        # Получаем все доступные теги
-        all_tags = list(Recipe.objects.values_list('tags__slug', flat=True).distinct())
+
+        all_tags = list(
+            Recipe.objects.values_list('tags__slug', flat=True).distinct()
+        )
         all_tags = [tag for tag in all_tags if tag is not None]
-        
-        # Если выбраны ВСЕ теги - показываем ВСЕ рецепты
+
         if set(value) == set(all_tags):
             return queryset
-        
-        # Иначе фильтруем по выбранным тегам
+
         return queryset.filter(tags__slug__in=value).distinct()
 
     def filter_is_favorited(self, queryset, name, value):
