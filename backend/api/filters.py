@@ -36,10 +36,3 @@ class RecipeFilter(filters.FilterSet):
         if value and self.request.user.is_authenticated:
             return queryset.filter(in_shopping_carts__user=self.request.user)
         return queryset
-
-    def __init__(self, *args, **kwargs):
-        print("=== RECIPE_FILTER INIT ===")
-        print(f"Args: {args}")
-        print(f"Kwargs: {kwargs}")
-        super().__init__(*args, **kwargs)
-        print("=== RECIPE_FILTER INIT COMPLETE ===")

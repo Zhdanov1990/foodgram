@@ -14,7 +14,6 @@ class Command(BaseCommand):
             {'name': 'Напитки', 'color': '#FF6B6B', 'slug': 'drinks'},
             {'name': 'Закуски', 'color': '#4ECDC4', 'slug': 'appetizers'},
             {'name': 'Мороженое', 'color': '#45B7D1', 'slug': 'ice-cream'},
-            {'name': 'Сладости', 'color': '#FFA07A', 'slug': 'desserts'},
         ]
         Tag.objects.bulk_create(
             [Tag(**tag) for tag in data],
