@@ -20,7 +20,8 @@ from api.serializers import (
     SubscriptionSerializer,
     TagSerializer,
     UserCreateSerializer,
-    UserListSerializer
+    UserListSerializer,
+    UserWithRecipesSerializer
 )
 from recipes.models import (
     Favorite, Ingredient, Recipe, RecipeIngredient,
@@ -231,7 +232,7 @@ class UserViewSet(DjoserUserViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             Subscription.objects.create(user=user, author=author)
-            serializer = SubscriptionSerializer(
+            serializer = UserWithRecipesSerializer(
                 author, context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -241,7 +242,10 @@ class UserViewSet(DjoserUserViewSet):
                 Subscription, user=user, author=author
             )
             subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer = UserWithRecipesSerializer(
+                author, context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
@@ -252,11 +256,11 @@ class UserViewSet(DjoserUserViewSet):
         queryset = User.objects.filter(following__user=user)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = SubscriptionSerializer(
+            serializer = UserWithRecipesSerializer(
                 page, many=True, context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
-        serializer = SubscriptionSerializer(
+        serializer = UserWithRecipesSerializer(
             queryset, many=True, context={'request': request}
         )
         return Response(serializer.data)

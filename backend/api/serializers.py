@@ -238,6 +238,49 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
 
+class UserWithRecipesSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя с рецептами в подписках."""
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(
+        source='recipes.count',
+        read_only=True
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'username',
+            'first_name', 'last_name',
+            'is_subscribed', 'recipes',
+            'recipes_count', 'avatar'
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return Subscription.objects.filter(user=user, author=obj).exists()
+
+    def get_recipes(self, obj):
+        limit = self.context['request'].GET.get('recipes_limit', 3)
+        qs = obj.recipes.all()
+        if limit:
+            qs = qs[:int(limit)]
+        return RecipeMinifiedSerializer(
+            qs,
+            many=True,
+            context=self.context
+        ).data
+
+
+class RecipeMinifiedSerializer(serializers.ModelSerializer):
+    """Сериализатор для краткого отображения рецепта."""
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Выдача информации об авторе и его рецептах при подписке."""
     id = serializers.IntegerField(source='author.id')
