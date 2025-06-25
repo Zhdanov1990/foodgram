@@ -10,13 +10,10 @@ export default function useRecipes () {
 
   const handleLike = ({ id, toLike = true }) => {
     const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
-    method({ id }).then(res => {
-      const recipesUpdated = recipes.map(recipe => {
-        if (recipe.id === id) {
-          return { ...recipe, is_favorited: toLike }
-        }
-        return recipe
-      })
+    method({ id }).then(({ data }) => {
+      const recipesUpdated = recipes.map(recipe =>
+        recipe.id === data.id ? data : recipe
+      )
       setRecipes(recipesUpdated)
     })
     .catch(err => {
@@ -29,13 +26,10 @@ export default function useRecipes () {
 
   const handleAddToCart = ({ id, toAdd = true, callback }) => {
     const method = toAdd ? api.addToOrders.bind(api) : api.removeFromOrders.bind(api)
-    method({ id }).then(res => {
-      const recipesUpdated = recipes.map(recipe => {
-        if (recipe.id === id) {
-          return { ...recipe, is_in_shopping_cart: toAdd }
-        }
-        return recipe
-      })
+    method({ id }).then(({ data }) => {
+      const recipesUpdated = recipes.map(recipe =>
+        recipe.id === data.id ? data : recipe
+      )
       setRecipes(recipesUpdated)
       callback && callback(toAdd)
     })

@@ -121,7 +121,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             obj = get_object_or_404(model, user=user, recipe=recipe)
             obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer = RecipeReadSerializer(
+                recipe, context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
