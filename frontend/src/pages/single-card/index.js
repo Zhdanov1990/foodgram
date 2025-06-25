@@ -6,6 +6,7 @@ import {
   TagsContainer,
   Icons,
   LinkComponent,
+  Popup,
 } from "../../components";
 import { UserContext, AuthContext } from "../../contexts";
 import { useContext, useState, useEffect } from "react";
@@ -33,6 +34,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
   const userContext = useContext(UserContext);
   const { id } = useParams();
   const history = useHistory();
+  const [toLogin, setToLogin] = useState(false);
 
   const handleCopyLink = () => {
     api
@@ -99,6 +101,17 @@ const SingleCard = ({ loadItem, updateOrders }) => {
           <meta name="description" content={`Фудграм - ${name}`} />
           <meta property="og:title" content={name} />
         </MetaTags>
+        {toLogin && (
+          <Popup
+            title={
+              <>
+                <LinkComponent href="/signin" title="Войдите" /> или{' '}
+                <LinkComponent href="/signup" title="зарегистрируйтесь" />, чтобы добавить в избранное или покупки
+              </>
+            }
+            onClose={() => setToLogin(false)}
+          />
+        )}
         <div className={styles["single-card"]}>
           <img
             src={image}
@@ -124,10 +137,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                   modifier="style_none"
                   clickHandler={(_) => {
                     if (!authContext) {
-                      setNotificationError({
-                        text: "Войдите или зарегистрируйтесь, чтобы добавить в избранное",
-                        position: "40px",
-                      });
+                      setToLogin(true);
                       return;
                     }
                     handleLike({ id, toLike: Number(!is_favorited) });
@@ -212,10 +222,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                 modifier="style_dark"
                 clickHandler={(_) => {
                   if (!authContext) {
-                    setNotificationError({
-                      text: "Войдите или зарегистрируйтесь, чтобы добавить в покупки",
-                      position: "40px",
-                    });
+                    setToLogin(true);
                     return;
                   }
                   handleAddToCart({

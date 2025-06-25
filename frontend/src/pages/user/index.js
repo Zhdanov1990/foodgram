@@ -112,9 +112,7 @@ const UserPage = ({ updateOrders }) => {
               <div
                 className={styles.userAvatar}
                 style={{
-                  "background-image": `url(${
-                    (user && user.avatar) || DefaultImage
-                  })`,
+                  "background-image": `url(${(user && user.avatar) || DefaultImage})`,
                 }}
               />
               <Title
@@ -124,7 +122,6 @@ const UserPage = ({ updateOrders }) => {
                 title={user ? `${user.first_name} ${user.last_name}` : ""}
               />
             </div>
-
             {(userContext || {}).id !== (user || {}).id && authContext && (
               <Button
                 className={cn(styles.buttonSubscribe, {
@@ -137,25 +134,25 @@ const UserPage = ({ updateOrders }) => {
                     : api.subscribe.bind(api);
                   method({
                     author_id: id,
-                  }).then((data) => {
-                    setSubscribed(!subscribed);
-                    if (data && data.id) {
-                      setUser(prevUser => ({ ...prevUser, ...data, is_subscribed: !subscribed }));
-                    }
-                  }).catch(err => {
-                    const { errors } = err;
-                    if (errors) {
-                      alert(errors);
-                    }
-                  });
+                  })
+                    .then((data) => {
+                      setSubscribed(!subscribed);
+                      if (data && data.id) {
+                        setUser((prevUser) => ({ ...prevUser, ...data, is_subscribed: !subscribed }));
+                      }
+                    })
+                    .catch((err) => {
+                      const { errors } = err;
+                      if (errors) {
+                        alert(errors);
+                      }
+                    });
                 }}
               >
-                <Icons.AddUser />{" "}
-                {subscribed ? "Отписаться от автора" : "Подписаться на автора"}
+                <Icons.AddUser /> {subscribed ? "Отписаться от автора" : "Подписаться на автора"}
               </Button>
             )}
           </div>
-
           <CheckboxGroup
             values={tagsValue}
             handleChange={(value) => {
@@ -164,7 +161,6 @@ const UserPage = ({ updateOrders }) => {
             }}
           />
         </div>
-
         {recipes.length > 0 && (
           <CardList>
             {recipes.map((card) => (
