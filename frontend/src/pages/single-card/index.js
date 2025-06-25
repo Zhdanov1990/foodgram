@@ -120,30 +120,32 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                   <Icons.CopyLinkIcon />
                 </Button>
                 <Tooltip id="tooltip-copy" />
-                {authContext && (
-                  <>
-                    <Button
-                      modifier="style_none"
-                      clickHandler={(_) => {
-                        handleLike({ id, toLike: Number(!is_favorited) });
-                      }}
-                      className={cn(styles["single-card__save-button"], {
-                        [styles["single-card__save-button_active"]]:
-                          is_favorited,
-                      })}
-                      data-tooltip-id="tooltip-save"
-                      data-tooltip-content={
-                        is_favorited
-                          ? "Удалить из избранного"
-                          : "Добавить в избранное"
-                      }
-                      data-tooltip-place="bottom"
-                    >
-                      <Icons.LikeIcon />
-                    </Button>
-                    <Tooltip id="tooltip-save" />
-                  </>
-                )}
+                <Button
+                  modifier="style_none"
+                  clickHandler={(_) => {
+                    if (!authContext) {
+                      setNotificationError({
+                        text: "Войдите или зарегистрируйтесь, чтобы добавить в избранное",
+                        position: "40px",
+                      });
+                      return;
+                    }
+                    handleLike({ id, toLike: Number(!is_favorited) });
+                  }}
+                  className={cn(styles["single-card__save-button"], {
+                    [styles["single-card__save-button_active"]]: is_favorited,
+                  })}
+                  data-tooltip-id="tooltip-save"
+                  data-tooltip-content={
+                    is_favorited
+                      ? "Удалить из избранного"
+                      : "Добавить в избранное"
+                  }
+                  data-tooltip-place="bottom"
+                >
+                  <Icons.LikeIcon />
+                </Button>
+                <Tooltip id="tooltip-save" />
               </div>
             </div>
 
@@ -202,33 +204,38 @@ const SingleCard = ({ loadItem, updateOrders }) => {
               )}
             </div>
             <div className={styles["single-card__buttons"]}>
-              {authContext && (
-                <Button
-                  className={cn(
-                    styles["single-card__button"],
-                    styles["single-card__button_add-receipt"]
-                  )}
-                  modifier="style_dark"
-                  clickHandler={(_) => {
-                    handleAddToCart({
-                      id,
-                      toAdd: Number(!is_in_shopping_cart),
-                      callback: updateOrders,
+              <Button
+                className={cn(
+                  styles["single-card__button"],
+                  styles["single-card__button_add-receipt"]
+                )}
+                modifier="style_dark"
+                clickHandler={(_) => {
+                  if (!authContext) {
+                    setNotificationError({
+                      text: "Войдите или зарегистрируйтесь, чтобы добавить в покупки",
+                      position: "40px",
                     });
-                  }}
-                >
-                  {is_in_shopping_cart ? (
-                    <>
-                      <Icons.CheckIcon />
-                      Рецепт добавлен
-                    </>
-                  ) : (
-                    <>
-                      <Icons.PlusIcon /> Добавить в покупки
-                    </>
-                  )}
-                </Button>
-              )}
+                    return;
+                  }
+                  handleAddToCart({
+                    id,
+                    toAdd: Number(!is_in_shopping_cart),
+                    callback: updateOrders,
+                  });
+                }}
+              >
+                {is_in_shopping_cart ? (
+                  <>
+                    <Icons.CheckIcon />
+                    Рецепт добавлен
+                  </>
+                ) : (
+                  <>
+                    <Icons.PlusIcon /> Добавить в покупки
+                  </>
+                )}
+              </Button>
               {authContext && (userContext || {}).id === author.id && (
                 <Button
                   href={`${url}/edit`}
