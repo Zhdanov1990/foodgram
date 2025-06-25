@@ -14,9 +14,9 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.BaseInFilter(
+    tags = filters.AllValuesMultipleFilter(
         field_name='tags__slug',
-        method='filter_tags'
+        lookup_expr='in'
     )
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
@@ -35,15 +35,6 @@ class RecipeFilter(filters.FilterSet):
     def filter_is_in_shopping_cart(self, queryset, name, value):
         if value and self.request.user.is_authenticated:
             return queryset.filter(in_shopping_carts__user=self.request.user)
-        return queryset
-
-    def filter_tags(self, queryset, name, value):
-        print("=== FILTER_TAGS CALLED ===")
-        print(f"Filter tags called with value: {value}")
-        print(f"Value type: {type(value)}")
-        if value:
-            print(f"Filtering by tags: {value}")
-            return queryset.filter(tags__slug__in=value).distinct()
         return queryset
 
     def __init__(self, *args, **kwargs):
