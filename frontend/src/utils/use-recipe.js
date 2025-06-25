@@ -36,9 +36,16 @@ export default function useRecipe () {
       method({
         author_id
       })
-      .then(_ => {
-        const recipeUpdated = { ...recipe, author: { ...recipe.author, is_subscribed: toSubscribe } }
-        setRecipe(recipeUpdated)
+      .then((data) => {
+        if (data && data.id) {
+          // Если сервер вернул данные автора, обновляем их
+          const recipeUpdated = { ...recipe, author: { ...recipe.author, ...data, is_subscribed: toSubscribe } }
+          setRecipe(recipeUpdated)
+        } else {
+          // Если сервер вернул 204, обновляем локально
+          const recipeUpdated = { ...recipe, author: { ...recipe.author, is_subscribed: toSubscribe } }
+          setRecipe(recipeUpdated)
+        }
       })
       .catch(err => {
         const { errors } = err

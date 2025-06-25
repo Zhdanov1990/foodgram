@@ -137,8 +137,16 @@ const UserPage = ({ updateOrders }) => {
                     : api.subscribe.bind(api);
                   method({
                     author_id: id,
-                  }).then((_) => {
+                  }).then((data) => {
                     setSubscribed(!subscribed);
+                    if (data && data.id) {
+                      setUser(prevUser => ({ ...prevUser, ...data, is_subscribed: !subscribed }));
+                    }
+                  }).catch(err => {
+                    const { errors } = err;
+                    if (errors) {
+                      alert(errors);
+                    }
                   });
                 }}
               >
