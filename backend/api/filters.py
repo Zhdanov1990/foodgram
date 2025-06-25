@@ -14,7 +14,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.MultipleChoiceFilter(
+    tags = filters.BaseInFilter(
         field_name='tags__slug',
         method='filter_tags'
     )
