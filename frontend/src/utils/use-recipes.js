@@ -10,7 +10,7 @@ export default function useRecipes () {
 
   const handleLike = ({ id, toLike = true }) => {
     const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
-    method({ id }).then(({ data }) => {
+    method({ id }).then((data) => {
       const recipesUpdated = recipes.map(recipe =>
         recipe.id === data.id ? data : recipe
       )
@@ -26,7 +26,7 @@ export default function useRecipes () {
 
   const handleAddToCart = ({ id, toAdd = true, callback }) => {
     const method = toAdd ? api.addToOrders.bind(api) : api.removeFromOrders.bind(api)
-    method({ id }).then(({ data }) => {
+    method({ id }).then((data) => {
       const recipesUpdated = recipes.map(recipe =>
         recipe.id === data.id ? data : recipe
       )

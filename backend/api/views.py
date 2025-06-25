@@ -115,7 +115,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             model.objects.create(user=user, recipe=recipe)
-            serializer = RecipeReadSerializer(recipe)
+            serializer = RecipeReadSerializer(
+                recipe, context={'request': request}
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':

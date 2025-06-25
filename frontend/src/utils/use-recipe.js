@@ -6,7 +6,7 @@ export default function useRecipe () {
 
   const handleLike = ({ id, toLike = 1 }) => {
     const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
-    method({ id }).then(({ data }) => {
+    method({ id }).then((data) => {
       setRecipe(data)
     })
     .catch(err => {
@@ -19,7 +19,7 @@ export default function useRecipe () {
 
   const handleAddToCart = ({ id, toAdd = 1, callback }) => {
     const method = toAdd ? api.addToOrders.bind(api) : api.removeFromOrders.bind(api)
-    method({ id }).then(({ data }) => {
+    method({ id }).then((data) => {
       setRecipe(data)
       callback && callback(toAdd)
     })
