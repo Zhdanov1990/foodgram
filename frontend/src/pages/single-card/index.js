@@ -39,9 +39,9 @@ const SingleCard = ({ loadItem, updateOrders }) => {
   const handleCopyLink = () => {
     api
       .copyRecipeLink({ id })
-      .then(({ url }) => {
+      .then(({ link }) => {
         navigator.clipboard
-          .writeText(url)
+          .writeText(link)
           .then(() => {
             setNotificationPosition("40px");
             setTimeout(() => {
@@ -49,33 +49,36 @@ const SingleCard = ({ loadItem, updateOrders }) => {
             }, 3000);
           })
           .catch(() => {
-            // Safari может не дать записать в буфер внутри then
+            /**
+             * В Safari не работает запись в буфер внутри асинхронного запроса,
+             * поэтому добавил отдельную плашку на этот случай
+             */
             setNotificationError({
-              text: `Ваша ссылка: ${url}`,
+              text: `Ваша ссылка: ${link}`,
               position: "40px",
             });
           });
       })
-      .catch((err) => {
-        console.error("Ошибка копирования ссылки:", err);
-      });
+      .catch((err) => console.log(err));
   };
 
   const handleErrorClose = () => {
     setNotificationError((prev) => ({ ...prev, position: "-100%" }));
   };
 
-  useEffect(() => {
+  useEffect((_) => {
     api
-      .getRecipe({ recipe_id: id })
+      .getRecipe({
+        recipe_id: id,
+      })
       .then((res) => {
         setRecipe(res);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
         history.push("/not-found");
       });
-  }, [id, history, setRecipe]);
+  }, []);
 
   const { url } = useRouteMatch();
   const {
@@ -98,20 +101,17 @@ const SingleCard = ({ loadItem, updateOrders }) => {
           <meta name="description" content={`Фудграм - ${name}`} />
           <meta property="og:title" content={name} />
         </MetaTags>
-
         {toLogin && (
           <Popup
             title={
               <>
-                <LinkComponent href="/signin" title="Войдите" /> или{" "}
-                <LinkComponent href="/signup" title="зарегистрируйтесь" />, чтобы
-                добавить в избранное или покупки
+                <LinkComponent href="/signin" title="Войдите" /> или{' '}
+                <LinkComponent href="/signup" title="зарегистрируйтесь" />, чтобы добавить в избранное или покупки
               </>
             }
             onClose={() => setToLogin(false)}
           />
         )}
-
         <div className={styles["single-card"]}>
           <img
             src={image}
@@ -133,10 +133,9 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                   <Icons.CopyLinkIcon />
                 </Button>
                 <Tooltip id="tooltip-copy" />
-
                 <Button
                   modifier="style_none"
-                  clickHandler={() => {
+                  clickHandler={(_) => {
                     if (!authContext) {
                       setToLogin(true);
                       return;
@@ -144,8 +143,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                     handleLike({ id, toLike: Number(!is_favorited) });
                   }}
                   className={cn(styles["single-card__save-button"], {
-                    [styles["single-card__save-button_active"]]:
-                      is_favorited,
+                    [styles["single-card__save-button_active"]]: is_favorited,
                   })}
                   data-tooltip-id="tooltip-save"
                   data-tooltip-content={
@@ -163,16 +161,13 @@ const SingleCard = ({ loadItem, updateOrders }) => {
 
             <div className={styles["single-card__extra-info"]}>
               <TagsContainer tags={tags} />
-              <p className={styles["single-card__text"]}>
-                {cooking_time} мин.
-              </p>
-
+              <p className={styles["single-card__text"]}>{cooking_time} мин.</p>
               <p className={styles["single-card__text_with_link"]}>
                 <div className={styles["single-card__text"]}>
                   <div
                     className={styles["single-card__user-avatar"]}
                     style={{
-                      backgroundImage: `url(${
+                      "background-image": `url(${
                         author.avatar || DefaultImage
                       })`,
                     }}
@@ -184,8 +179,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                   />
                 </div>
               </p>
-
-              {(userContext?.id !== author.id) && authContext && (
+              {(userContext || {}).id !== author.id && authContext && (
                 <>
                   <Button
                     className={cn(
@@ -199,12 +193,12 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                     modifier={
                       author.is_subscribed ? "style_dark" : "style_light"
                     }
-                    clickHandler={() =>
+                    clickHandler={(_) => {
                       handleSubscribe({
                         author_id: author.id,
                         toSubscribe: !author.is_subscribed,
-                      })
-                    }
+                      });
+                    }}
                     data-tooltip-id="tooltip-subscribe"
                     data-tooltip-content={
                       author.is_subscribed
@@ -219,7 +213,6 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                 </>
               )}
             </div>
-
             <div className={styles["single-card__buttons"]}>
               <Button
                 className={cn(
@@ -227,7 +220,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                   styles["single-card__button_add-receipt"]
                 )}
                 modifier="style_dark"
-                clickHandler={() => {
+                clickHandler={(_) => {
                   if (!authContext) {
                     setToLogin(true);
                     return;
@@ -250,8 +243,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                   </>
                 )}
               </Button>
-
-              {authContext && userContext?.id === author.id && (
+              {authContext && (userContext || {}).id === author.id && (
                 <Button
                   href={`${url}/edit`}
                   className={styles["single-card__edit"]}
@@ -260,12 +252,10 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                 </Button>
               )}
             </div>
-
             <Ingredients ingredients={ingredients} />
             <Description description={text} />
           </div>
         </div>
-
         <Notification
           text="Ссылка скопирована"
           style={{ right: notificationPosition }}
