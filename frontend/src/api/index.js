@@ -242,13 +242,44 @@ class Api {
   }
 
   copyRecipeLink({ id }) {
-    return fetch(`/api/recipes/${id}/get-link/`, {
-      method: "GET",
-      headers: {
-        ...this._headers,
-      },
-    }).then(this.checkResponse);
+    const token = localStorage.getItem("token");
+    return fetch(
+      `${this._url}/recipes/${id}/get-link/`,
+      {
+        method: "GET",
+        headers: {
+          ...this._headers,
+          ...(token && { Authorization: `Token ${token}` }),
+        },
+      }
+    )
+      .then((res) => {
+        if (res.status === 401) {
+          // неавторизованный
+          return res.json().then(() => {
+            throw new Error("Авторизуйтесь, чтобы получить ссылку");
+          });
+        }
+        if (!res.ok) {
+          return res.json().then((err) => Promise.reject(err));
+        }
+        return res.json();
+      })
+      .then(({ url }) => {
+        if (!url) {
+          throw new Error("В ответе нет поля url");
+        }
+        return navigator.clipboard
+          .writeText(url)
+          .then(() => alert("Ссылка скопирована в буфер!"));
+      })
+      .catch((err) => {
+        // здесь будут и JSON-ошибки от checkResponse, и наш Error
+        console.error("copyRecipeLink:", err);
+        alert(err.message);
+      });
   }
+  
 
   getUser({ id }) {
     const token = localStorage.getItem("token");
