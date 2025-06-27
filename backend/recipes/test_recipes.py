@@ -1,8 +1,9 @@
 import pytest
-from rest_framework.test import APIClient
-from rest_framework import status
 
-from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import User
 
 

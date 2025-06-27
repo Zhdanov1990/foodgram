@@ -70,9 +70,6 @@ function App() {
         history.push("/signin");
       })
       .catch((err) => {
-        // Временное логирование для диагностики
-        console.log("Ошибка смены пароля:", err);
-        
         // Правильная обработка ошибок от backend
         if (err.current_password) {
           setChangePasswordError({ submitError: err.current_password.join(", ") });
