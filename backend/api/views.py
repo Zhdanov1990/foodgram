@@ -211,6 +211,11 @@ class UserViewSet(DjoserUserViewSet):
             return UserCreateSerializer
         return UserListSerializer
 
+    def get_permissions(self):
+        if self.action == 'retrieve':
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
     @action(
         detail=True,
         methods=['post', 'delete'],
