@@ -27,6 +27,7 @@ from recipes.models import (
     ShoppingCart, Tag
 )
 from users.models import Subscription
+from users.serializers import UserSetPasswordSerializer
 
 User = get_user_model()
 
@@ -345,6 +346,21 @@ class UserViewSet(DjoserUserViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def set_password(self, request):
+        serializer = UserSetPasswordSerializer(
+            request.user, 
+            data=request.data, 
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,

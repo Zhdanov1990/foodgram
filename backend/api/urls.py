@@ -42,6 +42,11 @@ urlpatterns = [
         }),
         name='user-avatar'
     ),
+    path(
+        'users/set_password/',
+        UserViewSet.as_view({'post': 'set_password'}),
+        name='user-set-password'
+    ),
     path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
 ]
