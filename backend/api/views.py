@@ -354,8 +354,8 @@ class UserViewSet(DjoserUserViewSet):
     )
     def set_password(self, request):
         serializer = UserSetPasswordSerializer(
-            request.user, 
-            data=request.data, 
+            request.user,
+            data=request.data,
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
