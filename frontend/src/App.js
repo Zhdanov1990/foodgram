@@ -58,7 +58,12 @@ function App() {
       });
   };
 
-  const changePassword = ({ new_password, current_password }) => {
+  const changePassword = ({ new_password, current_password, repeat_password }) => {
+    if (new_password !== repeat_password) {
+      setChangePasswordError({ submitError: "Пароли не совпадают" });
+      return;
+    }
+    
     api
       .changePassword({ new_password, current_password })
       .then((res) => {
