@@ -142,7 +142,6 @@ DJOSER = {
     },
 }
 
-# CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://foodgram-menu.zapto.org",
@@ -154,7 +153,6 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Дополнительные CORS настройки
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -194,19 +192,15 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 
 DOMAIN_NAME = os.getenv('DOMAIN_NAME', 'localhost')
 
-# Настройки для изображений
 FILE_UPLOAD_HANDLERS = [
     'django.core.files.uploadhandler.MemoryFileUploadHandler',
     'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 ]
 
-# Максимальный размер файла (10MB)
 MAX_UPLOAD_SIZE = 10485760
 
-# Разрешенные форматы изображений
 ALLOWED_IMAGE_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
 
-# Настройки логирования
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
