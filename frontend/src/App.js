@@ -70,9 +70,22 @@ function App() {
         history.push("/signin");
       })
       .catch((err) => {
-        const errors = Object.values(err);
-        if (errors) {
-          setChangePasswordError({ submitError: errors.join(", ") });
+        // Временное логирование для диагностики
+        console.log("Ошибка смены пароля:", err);
+        
+        // Правильная обработка ошибок от backend
+        if (err.current_password) {
+          setChangePasswordError({ submitError: err.current_password.join(", ") });
+        } else if (err.new_password) {
+          setChangePasswordError({ submitError: err.new_password.join(", ") });
+        } else if (err.non_field_errors) {
+          setChangePasswordError({ submitError: err.non_field_errors.join(", ") });
+        } else {
+          // Fallback для других ошибок
+          const errors = Object.values(err);
+          if (errors && errors.length > 0) {
+            setChangePasswordError({ submitError: errors.join(", ") });
+          }
         }
       });
   };
