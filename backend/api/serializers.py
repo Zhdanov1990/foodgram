@@ -164,8 +164,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all(),
     )
-    ingredients = IngredientWriteSerializer(
-        many=True,
+    ingredients = serializers.ListField(
+        child=serializers.DictField(),
         write_only=True,
     )
     cooking_time = serializers.IntegerField(
@@ -196,28 +196,23 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        ing = data.get('ingredients', [])
-        if not ing:
+        ingredients = data.get('ingredients', [])
+        if not ingredients:
             raise serializers.ValidationError(
                 'Добавьте хотя бы один ингредиент.'
             )
 
-        # Обрабатываем ингредиенты из FormData (они приходят как JSON строки)
-        processed_ingredients = []
-        for item in ing:
-            if isinstance(item, str):
-                try:
-                    item = json.loads(item)
-                except (json.JSONDecodeError, TypeError):
-                    raise serializers.ValidationError(
-                        'Неверный формат ингредиента.'
-                    )
-            processed_ingredients.append(item)
+        # Валидируем каждый ингредиент через IngredientWriteSerializer
+        validated_ingredients = []
+        for item in ingredients:
+            serializer = IngredientWriteSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            validated_ingredients.append(serializer.validated_data)
 
-        data['ingredients'] = processed_ingredients
+        data['ingredients'] = validated_ingredients
 
-        # Исправлено: item['id'] уже является числом, убираем .id
-        ids = [item['id'] for item in processed_ingredients]
+        # Проверяем уникальность ингредиентов
+        ids = [item['id'].id for item in validated_ingredients]
         if len(ids) != len(set(ids)):
             raise serializers.ValidationError(
                 'Ингредиент должен быть уникальным!'
@@ -228,7 +223,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         objs = [
             RecipeIngredient(
                 recipe=recipe,
-                ingredient_id=item['id'],
+                ingredient=item['id'],
                 amount=item['amount'],
             )
             for item in ingredients

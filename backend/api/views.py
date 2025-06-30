@@ -61,6 +61,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
     search_fields = ['name']
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
         if self.action in (
