@@ -163,10 +163,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all(),
     )
-    ingredients = serializers.ListField(
-        child=serializers.DictField(),
-        write_only=True,
-    )
+    ingredients = IngredientWriteSerializer(many=True, write_only=True)
     cooking_time = serializers.IntegerField(
         validators=[
             MinValueValidator(MIN_COOKING_TIME),
@@ -181,6 +178,19 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'cooking_time', 'tags', 'ingredients',
         )
         read_only_fields = ('id',)
+
+    def to_internal_value(self, data):
+        # Обработка ингредиентов, если они приходят как JSON-строка
+        ingredients = data.get('ingredients')
+        if isinstance(ingredients, str):
+            import json
+            try:
+                data['ingredients'] = json.loads(ingredients)
+            except Exception:
+                raise serializers.ValidationError({
+                    'ingredients': 'Некорректный формат ингредиентов.'
+                })
+        return super().to_internal_value(data)
 
     def validate_image(self, value):
         if value.size > MAX_IMAGE_SIZE:
@@ -200,18 +210,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Добавьте хотя бы один ингредиент.'
             )
-
-        # Валидируем каждый ингредиент через IngredientWriteSerializer
-        validated_ingredients = []
-        for item in ingredients:
-            serializer = IngredientWriteSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            validated_ingredients.append(serializer.validated_data)
-
-        data['ingredients'] = validated_ingredients
-
         # Проверяем уникальность ингредиентов
-        ids = [item['id'].id for item in validated_ingredients]
+        ids = [
+            item['id'].id for item in ingredients
+        ]
         if len(ids) != len(set(ids)):
             raise serializers.ValidationError(
                 'Ингредиент должен быть уникальным!'

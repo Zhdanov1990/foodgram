@@ -190,9 +190,9 @@ class Api {
     tags.forEach(tag => formData.append('tags', tag));
     formData.append('cooking_time', cooking_time);
     formData.append('text', text);
-    ingredients.forEach(ingredient => {
-      formData.append('ingredients', JSON.stringify(ingredient));
-    });
+    if (ingredients && ingredients.length) {
+      formData.append('ingredients', JSON.stringify(ingredients));
+    }
     
     return fetch("/api/recipes/", {
       method: "POST",
@@ -218,9 +218,9 @@ class Api {
     tags.forEach(tag => formData.append('tags', tag));
     formData.append('cooking_time', Number(cooking_time));
     formData.append('text', text);
-    ingredients.forEach(ingredient => {
-      formData.append('ingredients', JSON.stringify(ingredient));
-    });
+    if (ingredients && ingredients.length) {
+      formData.append('ingredients', JSON.stringify(ingredients));
+    }
     
     return fetch(`/api/recipes/${recipe_id}/`, {
       method: "PATCH",
