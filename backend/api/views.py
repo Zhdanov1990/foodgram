@@ -282,17 +282,28 @@ class UserViewSet(DjoserUserViewSet):
     def avatar(self, request):
         """Обновление аватара пользователя."""
         user = request.user
+        print(f"Avatar method called: {request.method}")
+        print(f"Request content type: {request.content_type}")
+        print(f"Request data keys: {list(request.data.keys()) if hasattr(request.data, 'keys') else 'No data'}")
+        print(f"Request FILES keys: {list(request.FILES.keys()) if request.FILES else 'No files'}")
 
         if request.method in ['POST', 'PUT']:
-            serializer = UserListSerializer(
-                user,
-                data=request.data,
-                partial=True,
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                serializer = UserListSerializer(
+                    user,
+                    data=request.data,
+                    partial=True,
+                    context={'request': request}
+                )
+                print(f"Serializer is valid: {serializer.is_valid()}")
+                if not serializer.is_valid():
+                    print(f"Serializer errors: {serializer.errors}")
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                print(f"Exception in avatar method: {e}")
+                raise
 
         # DELETE - удаление аватара
         if user.avatar:
