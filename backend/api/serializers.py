@@ -1,17 +1,15 @@
 import django.contrib.auth.password_validation as validators
 
 from django.contrib.auth import authenticate, get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 from api.constants import (
-    MIN_AMOUNT, MAX_AMOUNT, MIN_COOKING_TIME, MAX_COOKING_TIME,
-    MAX_IMAGE_SIZE, ALLOWED_IMAGE_FORMATS
+    ALLOWED_IMAGE_FORMATS, MAX_AMOUNT, MAX_COOKING_TIME,
+    MAX_IMAGE_SIZE, MIN_AMOUNT, MIN_COOKING_TIME,
 )
-from recipes.models import (
-    Ingredient, Recipe, RecipeIngredient, Tag
-)
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import Subscription
 
 User = get_user_model()
