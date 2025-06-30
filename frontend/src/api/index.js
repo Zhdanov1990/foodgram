@@ -92,13 +92,15 @@ class Api {
 
   changeAvatar({ file }) {
     const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
     return fetch(`/api/users/me/avatar/`, {
       method: "PUT",
       headers: {
-        ...this._headers,
         authorization: `Token ${token}`,
       },
-      body: JSON.stringify({ avatar: file }),
+      body: formData,
     }).then(this.checkResponse);
   }
 
