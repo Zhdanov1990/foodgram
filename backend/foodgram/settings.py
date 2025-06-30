@@ -208,10 +208,6 @@ FILE_UPLOAD_HANDLERS = [
     'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 ]
 
-MAX_UPLOAD_SIZE = 10485760
-
-ALLOWED_IMAGE_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

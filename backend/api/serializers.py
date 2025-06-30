@@ -1,7 +1,7 @@
 import django.contrib.auth.password_validation as validators
+import json
 from django.contrib.auth import authenticate, get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
 from api.constants import (
@@ -159,7 +159,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Создание/обновление рецепта."""
-    image = Base64ImageField(use_url=True)
+    image = serializers.ImageField(use_url=True)
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
@@ -201,7 +201,22 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Добавьте хотя бы один ингредиент.'
             )
-        ids = [item['id'].id for item in ing]
+
+        # Обрабатываем ингредиенты из FormData (они приходят как JSON строки)
+        processed_ingredients = []
+        for item in ing:
+            if isinstance(item, str):
+                try:
+                    item = json.loads(item)
+                except (json.JSONDecodeError, TypeError):
+                    raise serializers.ValidationError(
+                        'Неверный формат ингредиента.'
+                    )
+            processed_ingredients.append(item)
+
+        data['ingredients'] = processed_ingredients
+
+        ids = [item['id'].id for item in processed_ingredients]
         if len(ids) != len(set(ids)):
             raise serializers.ValidationError(
                 'Ингредиент должен быть уникальным!'

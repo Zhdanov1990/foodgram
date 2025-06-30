@@ -180,20 +180,26 @@ class Api {
     ingredients = [],
   }) {
     const token = localStorage.getItem("token");
+    const formData = new FormData();
+    
+    // Добавляем все данные в FormData
+    formData.append('name', name);
+    if (image) {
+      formData.append('image', image);
+    }
+    tags.forEach(tag => formData.append('tags', tag));
+    formData.append('cooking_time', cooking_time);
+    formData.append('text', text);
+    ingredients.forEach(ingredient => {
+      formData.append('ingredients', JSON.stringify(ingredient));
+    });
+    
     return fetch("/api/recipes/", {
       method: "POST",
       headers: {
-        ...this._headers,
         authorization: `Token ${token}`,
       },
-      body: JSON.stringify({
-        name,
-        image,
-        tags,
-        cooking_time,
-        text,
-        ingredients,
-      }),
+      body: formData,
     }).then(this.checkResponse);
   }
 
@@ -201,23 +207,27 @@ class Api {
     { name, recipe_id, image, tags, cooking_time, text, ingredients },
     wasImageUpdated
   ) {
-    // image was changed
     const token = localStorage.getItem("token");
+    const formData = new FormData();
+    
+    // Добавляем все данные в FormData
+    formData.append('name', name);
+    if (wasImageUpdated && image) {
+      formData.append('image', image);
+    }
+    tags.forEach(tag => formData.append('tags', tag));
+    formData.append('cooking_time', Number(cooking_time));
+    formData.append('text', text);
+    ingredients.forEach(ingredient => {
+      formData.append('ingredients', JSON.stringify(ingredient));
+    });
+    
     return fetch(`/api/recipes/${recipe_id}/`, {
       method: "PATCH",
       headers: {
-        ...this._headers,
         authorization: `Token ${token}`,
       },
-      body: JSON.stringify({
-        name,
-        id: recipe_id,
-        image: wasImageUpdated ? image : undefined,
-        tags,
-        cooking_time: Number(cooking_time),
-        text,
-        ingredients,
-      }),
+      body: formData,
     }).then(this.checkResponse);
   }
 
