@@ -17,7 +17,6 @@ router.register('recipes', RecipeViewSet, basename='recipes')
 router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
-
     path(
         'recipes/favorites/',
         RecipeViewSet.as_view({'get': 'favorites'}),
@@ -48,5 +47,4 @@ urlpatterns = [
         name='user-set-password'
     ),
     path('', include(router.urls)),
-    path('auth/', include('djoser.urls.authtoken')),
 ]
