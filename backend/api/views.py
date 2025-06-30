@@ -1,6 +1,4 @@
-import base64
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -281,7 +279,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def avatar(self, request):
         user = request.user
-        
+
         if request.method in ['POST', 'PUT']:
             serializer = UserListSerializer(
                 user,
@@ -292,7 +290,7 @@ class UserViewSet(DjoserUserViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
+
         if user.avatar:
             user.avatar.delete()
             user.save()

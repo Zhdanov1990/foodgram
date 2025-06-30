@@ -10,7 +10,7 @@ from api.constants import (
     MAX_IMAGE_SIZE, ALLOWED_IMAGE_FORMATS
 )
 from recipes.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
+    Ingredient, Recipe, RecipeIngredient, Tag
 )
 from users.models import Subscription
 
@@ -133,6 +133,19 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
+class IngredientWriteSerializer(serializers.Serializer):
+    """Сериализатор для добавления ингредиента в рецепт."""
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+    amount = serializers.IntegerField(
+        validators=[
+            MinValueValidator(MIN_AMOUNT),
+            MaxValueValidator(MAX_AMOUNT)
+        ]
+    )
+
+
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиентов в рецепте."""
     id = serializers.PrimaryKeyRelatedField(
@@ -226,7 +239,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if 'ingredients' in validated_data:
             instance.ingredients.clear()
-            self._bulk_create_ingredients(instance, validated_data.pop('ingredients'))
+            self._bulk_create_ingredients(
+                instance,
+                validated_data.pop('ingredients')
+            )
         if 'tags' in validated_data:
             instance.tags.set(validated_data.pop('tags'))
         return super().update(instance, validated_data)
@@ -251,14 +267,18 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         return (
             user.is_authenticated
-            and user.favorites.filter(recipe=obj).exists()
+            and user.favorites.filter(
+                recipe=obj
+            ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         return (
             user.is_authenticated
-            and user.shopping_cart.filter(recipe=obj).exists()
+            and user.shopping_cart.filter(
+                recipe=obj
+            ).exists()
         )
 
 
@@ -338,16 +358,3 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             many=True,
             context=self.context
         ).data
-
-
-class IngredientWriteSerializer(serializers.Serializer):
-    """Сериализатор для добавления ингредиента в рецепт."""
-    id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
-    )
-    amount = serializers.IntegerField(
-        validators=[
-            MinValueValidator(MIN_AMOUNT),
-            MaxValueValidator(MAX_AMOUNT)
-        ]
-    )
