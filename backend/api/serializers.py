@@ -180,15 +180,30 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def to_internal_value(self, data):
-        # Обработка ингредиентов, если они приходят как JSON-строка
+        # Обработка ingredients для multipart: строка или список строк
         ingredients = data.get('ingredients')
-        if isinstance(ingredients, str):
-            import json
+        import json
+        if isinstance(ingredients, list):
+            try:
+                ingredients = [
+                    json.loads(item) if isinstance(item, str) else item
+                    for item in ingredients
+                ]
+                data['ingredients'] = ingredients
+            except Exception:
+                raise serializers.ValidationError({
+                    'ingredients': (
+                        'Некорректный формат ингредиентов (список).'
+                    )
+                })
+        elif isinstance(ingredients, str):
             try:
                 data['ingredients'] = json.loads(ingredients)
             except Exception:
                 raise serializers.ValidationError({
-                    'ingredients': 'Некорректный формат ингредиентов.'
+                    'ingredients': (
+                        'Некорректный формат ингредиентов (строка).'
+                    )
                 })
         return super().to_internal_value(data)
 
@@ -212,7 +227,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             )
         # Проверяем уникальность ингредиентов
         ids = [
-            item['id'].id for item in ingredients
+            item['id'].id
+            for item in ingredients
         ]
         if len(ids) != len(set(ids)):
             raise serializers.ValidationError(
