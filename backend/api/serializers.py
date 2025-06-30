@@ -216,7 +216,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
         data['ingredients'] = processed_ingredients
 
-        ids = [item['id'].id for item in processed_ingredients]
+        # Исправлено: item['id'] уже является числом, убираем .id
+        ids = [item['id'] for item in processed_ingredients]
         if len(ids) != len(set(ids)):
             raise serializers.ValidationError(
                 'Ингредиент должен быть уникальным!'
@@ -227,7 +228,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         objs = [
             RecipeIngredient(
                 recipe=recipe,
-                ingredient=item['id'],
+                ingredient_id=item['id'],  # Исправлено: используем ingredient_id вместо ingredient
                 amount=item['amount'],
             )
             for item in ingredients
