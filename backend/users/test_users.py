@@ -27,7 +27,7 @@ def test_user_str():
 @pytest.mark.django_db
 def test_user_list_api():
     client = APIClient()
-    url = reverse('user-list')
+    url = reverse('api:user-list')
     response = client.get(
         url,
         format='json',
