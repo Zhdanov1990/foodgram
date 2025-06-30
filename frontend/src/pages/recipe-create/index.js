@@ -326,7 +326,7 @@ const RecipeCreate = ({ onEdit }) => {
               setRecipeFile(file);
             }}
             fileTypes={["image/png", "image/jpeg"]}
-            fileSize={5000}
+            fileSize={10}
             className={styles.fileInput}
             label="Загрузить фото"
           />

@@ -21,7 +21,9 @@ class Command(BaseCommand):
         # Загрузка из JSON
         json_file = os.path.join(data_dir, 'ingredients.json')
         if os.path.exists(json_file):
-            self.stdout.write(f'Загружаем ингредиенты из {json_file}...')
+            self.stdout.write(
+                f'Загружаем ингредиенты из {json_file}...'
+            )
             try:
                 with open(json_file, 'r', encoding='utf-8') as f:
                     ingredients_data = json.load(f)
@@ -64,7 +66,9 @@ class Command(BaseCommand):
         # Загрузка из CSV
         csv_file = os.path.join(data_dir, 'ingredients.csv')
         if os.path.exists(csv_file):
-            self.stdout.write(f'Загружаем ингредиенты из {csv_file}...')
+            self.stdout.write(
+                f'Загружаем ингредиенты из {csv_file}...'
+            )
             try:
                 csv_created = 0
                 csv_total = 0

@@ -3,6 +3,9 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from recipes.management.commands.load_ingrs import Command as LoadIngrs
+from recipes.management.commands.load_tags import Command as LoadTags
+
 
 class Command(BaseCommand):
     help = 'Загрузка всех данных из фикстур.'
@@ -29,9 +32,9 @@ class Command(BaseCommand):
                 f'Создана папка для аватаров: {avatars_media_dir}'
             )
 
-        self.stdout.write(self.style.SUCCESS('Загрузка ингредиентов...'))
-        from recipes.management.commands.load_ingrs import Command as LoadIngrs
-        from recipes.management.commands.load_tags import Command as LoadTags
+        self.stdout.write(
+            self.style.SUCCESS('Загрузка ингредиентов...')
+        )
         LoadIngrs().handle()
         LoadTags().handle()
         self.stdout.write(self.style.SUCCESS('Готово!'))

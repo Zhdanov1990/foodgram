@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 export const AvatarPopup = ({
   onSubmit,
   onClose,
-  fileSize = 5,
+  fileSize = 10,
   fileTypes = ["jpg", "png"],
   onChange,
   avatar,

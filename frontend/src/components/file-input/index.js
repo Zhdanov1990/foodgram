@@ -25,8 +25,8 @@ const FileInput = ({
   const getBase64 = (file) => {
     const reader = new FileReader()
 
-    if (fileSize && ((file.size / 1000) > fileSize)) {
-      return alert(`Загрузите файл размером не более ${fileSize / 1000}Мб`)
+    if (fileSize && (file.size / (1024 * 1024)) > fileSize) {
+      return alert(`Загрузите файл размером не более ${fileSize}Мб`)
     }
     if (fileTypes && !fileTypes.includes(file.type)) {
       return alert(`Загрузите файл одного из типов: ${fileTypes.join(', ')}`)
