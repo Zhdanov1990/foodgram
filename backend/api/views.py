@@ -282,10 +282,18 @@ class UserViewSet(DjoserUserViewSet):
     def avatar(self, request):
         """Обновление аватара пользователя."""
         user = request.user
-        print(f"Avatar method called: {request.method}")
-        print(f"Request content type: {request.content_type}")
-        print(f"Request data keys: {list(request.data.keys()) if hasattr(request.data, 'keys') else 'No data'}")
-        print(f"Request FILES keys: {list(request.FILES.keys()) if request.FILES else 'No files'}")
+        print(
+            f"Avatar method called: {request.method}"
+        )
+        print(
+            f"Request content type: {request.content_type}"
+        )
+        data_keys = list(request.data.keys()) \
+            if hasattr(request.data, 'keys') else 'No data'
+        print("Request data keys:", data_keys)
+        files_keys = list(request.FILES.keys()) \
+            if request.FILES else 'No files'
+        print("Request FILES keys:", files_keys)
 
         if request.method in ['POST', 'PUT']:
             try:
@@ -295,9 +303,12 @@ class UserViewSet(DjoserUserViewSet):
                     partial=True,
                     context={'request': request}
                 )
-                print(f"Serializer is valid: {serializer.is_valid()}")
-                if not serializer.is_valid():
-                    print(f"Serializer errors: {serializer.errors}")
+                is_valid = serializer.is_valid()
+                print("Serializer is valid:", is_valid)
+                if not is_valid:
+                    errors = serializer.errors
+                    print("Serializer errors:")
+                    print(errors)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
