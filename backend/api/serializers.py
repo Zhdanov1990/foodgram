@@ -228,7 +228,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         objs = [
             RecipeIngredient(
                 recipe=recipe,
-                ingredient_id=item['id'],  # Исправлено: используем ingredient_id вместо ingredient
+                ingredient_id=item['id'],
                 amount=item['amount'],
             )
             for item in ingredients
