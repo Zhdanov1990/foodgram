@@ -3,24 +3,28 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser import permissions as djoser_perms
+from djoser import permissions as djoser_permissions
 from djoser.views import UserViewSet as DjoserUserViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter
 from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrAdminOrReadOnly
 from api.serializers import (
-    IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer,
-    TagSerializer, UserCreateSerializer, UserListSerializer,
-    UserWithRecipesSerializer,
+    IngredientSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer,
+    TagSerializer,
+    UserCreateSerializer,
+    UserListSerializer,
+    UserWithRecipesSerializer
 )
 from recipes.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
+    Favorite, Ingredient, Recipe, RecipeIngredient,
+    ShoppingCart, Tag
 )
 from users.models import Subscription
 from users.serializers import UserSetPasswordSerializer
@@ -29,7 +33,6 @@ User = get_user_model()
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """Теги."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [permissions.AllowAny]
@@ -37,16 +40,15 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """Ингредиенты."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [permissions.AllowAny]
-    pagination_class = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
+    pagination_class = None
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = Ingredient.objects.all()
         name = self.request.query_params.get('name')
         if name:
             qs = qs.filter(name__icontains=name)
@@ -54,25 +56,23 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    """Рецепты."""
     queryset = Recipe.objects.all().order_by('-pub_date')
     permission_classes = [IsAuthorOrAdminOrReadOnly]
-    pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
     search_fields = ['name']
-    parser_classes = [MultiPartParser, FormParser]
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action in (
+        if self.action in [
             'list', 'retrieve', 'favorites',
             'download_shopping_cart', 'get_link'
-        ):
+        ]:
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = Recipe.objects.all().order_by('-pub_date')
         if hasattr(self, 'filterset_class'):
             self.filterset = self.filterset_class(
                 self.request.GET,
@@ -83,7 +83,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save(author=self.request.user)
 
     @action(
         detail=True,
@@ -202,13 +202,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(DjoserUserViewSet):
-    """Пользователи и подписки."""
     queryset = User.objects.all()
     serializer_class = UserListSerializer
+    permission_classes = [djoser_permissions.CurrentUserOrAdminOrReadOnly]
     pagination_class = CustomPagination
-    permission_classes = [
-        djoser_perms.CurrentUserOrAdminOrReadOnly
-    ]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -226,7 +223,6 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def subscribe(self, request, pk=None):
-        """Подписка через профиль пользователя."""
         user = request.user
         author = get_object_or_404(User, id=pk)
 
@@ -236,7 +232,7 @@ class UserViewSet(DjoserUserViewSet):
                     {'errors': 'Нельзя подписаться на самого себя'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if user.following.filter(author=author).exists():
+            if Subscription.objects.filter(user=user, author=author).exists():
                 return Response(
                     {'errors': 'Вы уже подписаны на этого пользователя'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -263,9 +259,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = User.objects.filter(following__user=user).exclude(
-            id=user.id
-        )
+        queryset = User.objects.filter(following__user=user)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = UserWithRecipesSerializer(
@@ -281,41 +275,55 @@ class UserViewSet(DjoserUserViewSet):
         detail=False,
         methods=['post', 'put', 'delete'],
         permission_classes=[permissions.IsAuthenticated],
-        parser_classes=[MultiPartParser, FormParser],
         url_path='me/avatar'
     )
     def avatar(self, request):
-        """Обновление аватара пользователя."""
         user = request.user
-
         if request.method in ['POST', 'PUT']:
-            # Обработка multipart файлов
             if 'avatar' in request.FILES:
                 user.avatar = request.FILES['avatar']
                 user.save()
-                serializer = UserListSerializer(
+                data = UserListSerializer(
                     user, context={'request': request}
-                )
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-            # Обработка base64 данных через сериализатор
+                ).data
+                return Response(data, status=status.HTTP_200_OK)
             if request.data.get('avatar'):
-                serializer = UserListSerializer(
-                    user,
-                    data=request.data,
-                    partial=True,
-                    context={'request': request}
-                )
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
+                try:
+                    import base64
+                    from django.core.files.base import ContentFile
+                    avatar_data = request.data['avatar']
+                    if avatar_data.startswith('data:image'):
+                        fmt, imgstr = avatar_data.split(';base64,')
+                        ext = fmt.split('/')[-1]
+                        size = len(base64.b64decode(imgstr))
+                        if size > 10 * 1024 * 1024:
+                            return Response(
+                                {'detail': 'Макс. размер 10MB'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        avatar_file = ContentFile(
+                            base64.b64decode(imgstr),
+                            name=f'avatar.{ext}'
+                        )
+                        user.avatar = avatar_file
+                        user.save()
+                        data = UserListSerializer(
+                            user, context={'request': request}
+                        ).data
+                        return Response(data)
+                    return Response(
+                        {'detail': 'Неверный формат'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                except Exception as e:
+                    return Response(
+                        {'detail': str(e)},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             return Response(
                 {'detail': 'Файл не найден.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # DELETE - удаление аватара
         if user.avatar:
             user.avatar.delete()
             user.save()
@@ -348,7 +356,7 @@ class UserViewSet(DjoserUserViewSet):
         serializer = UserSetPasswordSerializer(
             request.user,
             data=request.data,
-            context={'request': request},
+            context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
