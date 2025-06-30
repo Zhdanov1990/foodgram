@@ -1,8 +1,5 @@
-import base64
-
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth import authenticate, get_user_model
-from django.core.files.base import ContentFile
 from django.core.validators import MaxValueValidator, MinValueValidator
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
@@ -66,50 +63,18 @@ class UserListSerializer(serializers.ModelSerializer):
         if not value:
             return value
 
-        # Если это base64 строка
-        if isinstance(value, str) and value.startswith('data:image'):
-            try:
-                fmt, imgstr = value.split(';base64,')
-                ext = fmt.split('/')[-1]
+        # Проверяем размер файла
+        if hasattr(value, 'size') and value.size > MAX_IMAGE_SIZE:
+            raise serializers.ValidationError(
+                'Размер изображения не должен превышать 10MB.'
+            )
 
-                # Проверяем размер
-                size = len(base64.b64decode(imgstr))
-                if size > MAX_IMAGE_SIZE:
-                    raise serializers.ValidationError(
-                        'Размер изображения не должен превышать 10MB.'
-                    )
-
-                # Проверяем формат
-                content_type = f'image/{ext}'
-                if content_type not in ALLOWED_IMAGE_FORMATS:
-                    raise serializers.ValidationError(
-                        'Поддерживаются форматы: JPEG, PNG, GIF.'
-                    )
-
-                # Создаем файл
-                avatar_file = ContentFile(
-                    base64.b64decode(imgstr),
-                    name=f'avatar.{ext}'
-                )
-                return avatar_file
-
-            except Exception as e:
-                raise serializers.ValidationError(
-                    f'Ошибка обработки изображения: {str(e)}'
-                )
-
-        # Если это обычный файл
-        if hasattr(value, 'size'):
-            if value.size > MAX_IMAGE_SIZE:
-                raise serializers.ValidationError(
-                    'Размер изображения не должен превышать 10MB.'
-                )
-
-            if hasattr(value, 'content_type'):
-                if value.content_type not in ALLOWED_IMAGE_FORMATS:
-                    raise serializers.ValidationError(
-                        'Поддерживаются форматы: JPEG, PNG, GIF.'
-                    )
+        # Проверяем формат файла
+        if (hasattr(value, 'content_type')
+                and value.content_type not in ALLOWED_IMAGE_FORMATS):
+            raise serializers.ValidationError(
+                'Поддерживаются форматы: JPEG, PNG, GIF.'
+            )
 
         return value
 
