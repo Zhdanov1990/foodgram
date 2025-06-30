@@ -8,6 +8,7 @@ from djoser import permissions as djoser_perms
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter
@@ -277,44 +278,39 @@ class UserViewSet(DjoserUserViewSet):
         detail=False,
         methods=['post', 'put', 'delete'],
         permission_classes=[permissions.IsAuthenticated],
+        parser_classes=[MultiPartParser, FormParser],
         url_path='me/avatar'
     )
     def avatar(self, request):
         """Обновление аватара пользователя."""
         user = request.user
-        print(
-            f"Avatar method called: {request.method}"
-        )
-        print(
-            f"Request content type: {request.content_type}"
-        )
-        data_keys = list(request.data.keys()) \
-            if hasattr(request.data, 'keys') else 'No data'
-        print("Request data keys:", data_keys)
-        files_keys = list(request.FILES.keys()) \
-            if request.FILES else 'No files'
-        print("Request FILES keys:", files_keys)
 
         if request.method in ['POST', 'PUT']:
-            try:
+            # Обработка multipart файлов
+            if 'avatar' in request.FILES:
+                user.avatar = request.FILES['avatar']
+                user.save()
+                serializer = UserListSerializer(
+                    user, context={'request': request}
+                )
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            # Обработка base64 данных через сериализатор
+            if request.data.get('avatar'):
                 serializer = UserListSerializer(
                     user,
                     data=request.data,
                     partial=True,
                     context={'request': request}
                 )
-                is_valid = serializer.is_valid()
-                print("Serializer is valid:", is_valid)
-                if not is_valid:
-                    errors = serializer.errors
-                    print("Serializer errors:")
-                    print(errors)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            except Exception as e:
-                print(f"Exception in avatar method: {e}")
-                raise
+
+            return Response(
+                {'detail': 'Файл не найден.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # DELETE - удаление аватара
         if user.avatar:
