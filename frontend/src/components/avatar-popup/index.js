@@ -19,11 +19,16 @@ export const AvatarPopup = ({
     if (avatar) {
       setCurrentFile(avatar);
     }
+    
+    // Очистка URL объекта при размонтировании
+    return () => {
+      if (currentFile && currentFile.startsWith('blob:')) {
+        URL.revokeObjectURL(currentFile)
+      }
+    }
   }, [avatar]);
 
   const getBase64 = (file) => {
-    const reader = new FileReader();
-
     const fileNameArr = file.name.split(".");
     const format = fileNameArr[fileNameArr.length - 1];
 
@@ -35,14 +40,11 @@ export const AvatarPopup = ({
         `Загрузите файл одного из типов: ${fileTypes.join(", ")}`
       );
     }
-    reader.readAsDataURL(file);
-    reader.onload = function () {
-      setCurrentFile(reader.result);
-      onChange(reader.result);
-    };
-    reader.onerror = function (error) {
-      console.log("Error: ", error);
-    };
+    
+    // Создаем URL для предварительного просмотра
+    const imageUrl = URL.createObjectURL(file);
+    setCurrentFile(imageUrl);
+    onChange(file);  // Передаем файл как есть, а не base64
   };
 
   return (
@@ -78,6 +80,10 @@ export const AvatarPopup = ({
               <Button
                 className={styles.button_overlay}
                 clickHandler={() => {
+                  // Освобождаем память от URL объекта
+                  if (currentFile && currentFile.startsWith('blob:')) {
+                    URL.revokeObjectURL(currentFile)
+                  }
                   setCurrentFile(null);
                   onChange(null);
                   fileInput.current.value = "";

@@ -20,25 +20,26 @@ const FileInput = ({
     if (file !== currentFile) {
       setCurrentFile(file)
     }
+    
+    // Очистка URL объекта при размонтировании
+    return () => {
+      if (currentFile && currentFile.startsWith('blob:')) {
+        URL.revokeObjectURL(currentFile)
+      }
+    }
   }, [file])
 
   const getBase64 = (file) => {
-    const reader = new FileReader()
-
     if (fileSize && (file.size / (1024 * 1024)) > fileSize) {
       return alert(`Загрузите файл размером не более ${fileSize}Мб`)
     }
     if (fileTypes && !fileTypes.includes(file.type)) {
       return alert(`Загрузите файл одного из типов: ${fileTypes.join(', ')}`)
     }
-    reader.readAsDataURL(file);
-    reader.onload = function () {
-      setCurrentFile(reader.result)
-      onChange(reader.result)
-    };
-    reader.onerror = function (error) {
-      console.log('Error: ', error);
-    }
+    
+    const imageUrl = URL.createObjectURL(file)
+    setCurrentFile(imageUrl)
+    onChange(file)
   }
 
   return <div className={cn(styles.container, className)}>
@@ -72,6 +73,9 @@ const FileInput = ({
         onChange(null)
         setCurrentFile(null)
         fileInput.current.value = null
+        if (currentFile && currentFile.startsWith('blob:')) {
+          URL.revokeObjectURL(currentFile)
+        }
       }}
     >
       <div className={styles.imageOverlay}>
