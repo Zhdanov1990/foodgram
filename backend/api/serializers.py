@@ -3,7 +3,12 @@ import django.contrib.auth.password_validation as validators
 from django.contrib.auth import authenticate, get_user_model
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
+from django.core.validators import MinValueValidator, MaxValueValidator
 
+from api.constants import (
+    MIN_AMOUNT, MAX_AMOUNT, MIN_COOKING_TIME, MAX_COOKING_TIME,
+    MAX_IMAGE_SIZE, ALLOWED_IMAGE_FORMATS
+)
 from recipes.models import (
     Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
 )
@@ -40,6 +45,7 @@ class TokenSerializer(serializers.Serializer):
 class UserListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка пользователей."""
     is_subscribed = serializers.SerializerMethodField()
+    avatar = Base64ImageField(required=False)
 
     class Meta:
         model = User
@@ -49,11 +55,28 @@ class UserListSerializer(serializers.ModelSerializer):
             'avatar', 'is_subscribed'
         )
 
+    def validate_avatar(self, value):
+        if value:
+            # Проверяем размер файла
+            if value.size > MAX_IMAGE_SIZE:
+                raise serializers.ValidationError(
+                    'Размер изображения не должен превышать 10MB.'
+                )
+            # Проверяем формат файла
+            if (
+                hasattr(value, 'content_type')
+                and value.content_type not in ALLOWED_IMAGE_FORMATS
+            ):
+                raise serializers.ValidationError(
+                    'Поддерживаются только форматы: JPEG, PNG, GIF.'
+                )
+        return value
+
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         if not user.is_authenticated:
             return False
-        return Subscription.objects.filter(user=user, author=obj).exists()
+        return user.following.filter(author=obj).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -138,9 +161,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all()
     )
-    ingredients = serializers.ListSerializer(
-        child=serializers.DictField(),
-        write_only=True
+    ingredients = IngredientWriteSerializer(many=True, write_only=True)
+    cooking_time = serializers.IntegerField(
+        validators=[
+            MinValueValidator(MIN_COOKING_TIME),
+            MaxValueValidator(MAX_COOKING_TIME)
+        ]
     )
 
     class Meta:
@@ -153,18 +179,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def validate_image(self, value):
         if value:
-            # Проверяем размер файла (10MB)
-            if value.size > 10 * 1024 * 1024:
+            # Проверяем размер файла
+            if value.size > MAX_IMAGE_SIZE:
                 raise serializers.ValidationError(
                     'Размер изображения не должен превышать 10MB.'
                 )
             # Проверяем формат файла
-            allowed_formats = [
-                'image/jpeg', 'image/jpg', 'image/png', 'image/gif'
-            ]
             if (
                 hasattr(value, 'content_type')
-                and value.content_type not in allowed_formats
+                and value.content_type not in ALLOWED_IMAGE_FORMATS
             ):
                 raise serializers.ValidationError(
                     'Поддерживаются только форматы: JPEG, PNG, GIF.'
@@ -180,28 +203,30 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         _validate_unique_ingredients(ingredients)
         return data
 
+    def _bulk_create_ingredients(self, recipe, ingredients):
+        """Создает ингредиенты рецепта используя bulk_create."""
+        objs = [
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=item['id'],
+                amount=item['amount']
+            )
+            for item in ingredients
+        ]
+        RecipeIngredient.objects.bulk_create(objs)
+
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        for item in ingredients:
-            RecipeIngredient.objects.create(
-                recipe=recipe,
-                ingredient_id=item['id'],
-                amount=item['amount']
-            )
+        self._bulk_create_ingredients(recipe, ingredients)
         return recipe
 
     def update(self, instance, validated_data):
         if 'ingredients' in validated_data:
             instance.ingredients.clear()
-            for item in validated_data.pop('ingredients'):
-                RecipeIngredient.objects.create(
-                    recipe=instance,
-                    ingredient_id=item['id'],
-                    amount=item['amount']
-                )
+            self._bulk_create_ingredients(instance, validated_data.pop('ingredients'))
         if 'tags' in validated_data:
             instance.tags.set(validated_data.pop('tags'))
         return super().update(instance, validated_data)
@@ -226,14 +251,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         return (
             user.is_authenticated
-            and Favorite.objects.filter(user=user, recipe=obj).exists()
+            and user.favorites.filter(recipe=obj).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         return (
             user.is_authenticated
-            and ShoppingCart.objects.filter(user=user, recipe=obj).exists()
+            and user.shopping_cart.filter(recipe=obj).exists()
         )
 
 
@@ -259,7 +284,7 @@ class UserWithRecipesSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not user.is_authenticated:
             return False
-        return Subscription.objects.filter(user=user, author=obj).exists()
+        return user.following.filter(author=obj).exists()
 
     def get_recipes(self, obj):
         limit = self.context['request'].GET.get('recipes_limit', 3)
@@ -313,3 +338,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             many=True,
             context=self.context
         ).data
+
+
+class IngredientWriteSerializer(serializers.Serializer):
+    """Сериализатор для добавления ингредиента в рецепт."""
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+    amount = serializers.IntegerField(
+        validators=[
+            MinValueValidator(MIN_AMOUNT),
+            MaxValueValidator(MAX_AMOUNT)
+        ]
+    )

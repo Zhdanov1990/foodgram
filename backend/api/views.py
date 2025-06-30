@@ -1,4 +1,6 @@
+import base64
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -232,7 +234,7 @@ class UserViewSet(DjoserUserViewSet):
                     {'errors': 'Нельзя подписаться на самого себя'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if Subscription.objects.filter(user=user, author=author).exists():
+            if user.following.filter(author=author).exists():
                 return Response(
                     {'errors': 'Вы уже подписаны на этого пользователя'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -279,51 +281,18 @@ class UserViewSet(DjoserUserViewSet):
     )
     def avatar(self, request):
         user = request.user
+        
         if request.method in ['POST', 'PUT']:
-            if 'avatar' in request.FILES:
-                user.avatar = request.FILES['avatar']
-                user.save()
-                data = UserListSerializer(
-                    user, context={'request': request}
-                ).data
-                return Response(data, status=status.HTTP_200_OK)
-            if request.data.get('avatar'):
-                try:
-                    import base64
-                    from django.core.files.base import ContentFile
-                    avatar_data = request.data['avatar']
-                    if avatar_data.startswith('data:image'):
-                        fmt, imgstr = avatar_data.split(';base64,')
-                        ext = fmt.split('/')[-1]
-                        size = len(base64.b64decode(imgstr))
-                        if size > 10 * 1024 * 1024:
-                            return Response(
-                                {'detail': 'Макс. размер 10MB'},
-                                status=status.HTTP_400_BAD_REQUEST
-                            )
-                        avatar_file = ContentFile(
-                            base64.b64decode(imgstr),
-                            name=f'avatar.{ext}'
-                        )
-                        user.avatar = avatar_file
-                        user.save()
-                        data = UserListSerializer(
-                            user, context={'request': request}
-                        ).data
-                        return Response(data)
-                    return Response(
-                        {'detail': 'Неверный формат'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                except Exception as e:
-                    return Response(
-                        {'detail': str(e)},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            return Response(
-                {'detail': 'Файл не найден.'},
-                status=status.HTTP_400_BAD_REQUEST
+            serializer = UserListSerializer(
+                user,
+                data=request.data,
+                partial=True,
+                context={'request': request}
             )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
         if user.avatar:
             user.avatar.delete()
             user.save()

@@ -180,26 +180,52 @@ class Api {
     ingredients = [],
   }) {
     const token = localStorage.getItem("token");
-    const formData = new FormData();
     
-    // Добавляем все данные в FormData
-    formData.append('name', name);
-    if (image) {
-      formData.append('image', image);
+    // Конвертируем изображение в base64 если это файл
+    let imageBase64 = image;
+    if (image && image instanceof File) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const data = {
+            name,
+            image: reader.result,
+            tags,
+            cooking_time,
+            text,
+            ingredients,
+          };
+          
+          fetch("/api/recipes/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Token ${token}`,
+            },
+            body: JSON.stringify(data),
+          }).then(this.checkResponse).then(resolve).catch(reject);
+        };
+        reader.readAsDataURL(image);
+      });
     }
-    tags.forEach(tag => formData.append('tags', tag));
-    formData.append('cooking_time', cooking_time);
-    formData.append('text', text);
-    if (ingredients && ingredients.length) {
-      formData.append('ingredients', JSON.stringify(ingredients));
-    }
+    
+    // Если изображение уже в base64
+    const data = {
+      name,
+      image: imageBase64,
+      tags,
+      cooking_time,
+      text,
+      ingredients,
+    };
     
     return fetch("/api/recipes/", {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         authorization: `Token ${token}`,
       },
-      body: formData,
+      body: JSON.stringify(data),
     }).then(this.checkResponse);
   }
 
@@ -208,26 +234,55 @@ class Api {
     wasImageUpdated
   ) {
     const token = localStorage.getItem("token");
-    const formData = new FormData();
     
-    // Добавляем все данные в FormData
-    formData.append('name', name);
-    if (wasImageUpdated && image) {
-      formData.append('image', image);
+    // Конвертируем изображение в base64 если это файл
+    let imageBase64 = image;
+    if (wasImageUpdated && image && image instanceof File) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const data = {
+            name,
+            image: reader.result,
+            tags,
+            cooking_time: Number(cooking_time),
+            text,
+            ingredients,
+          };
+          
+          fetch(`/api/recipes/${recipe_id}/`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Token ${token}`,
+            },
+            body: JSON.stringify(data),
+          }).then(this.checkResponse).then(resolve).catch(reject);
+        };
+        reader.readAsDataURL(image);
+      });
     }
-    tags.forEach(tag => formData.append('tags', tag));
-    formData.append('cooking_time', Number(cooking_time));
-    formData.append('text', text);
-    if (ingredients && ingredients.length) {
-      formData.append('ingredients', JSON.stringify(ingredients));
+    
+    // Если изображение уже в base64 или не обновляется
+    const data = {
+      name,
+      tags,
+      cooking_time: Number(cooking_time),
+      text,
+      ingredients,
+    };
+    
+    if (wasImageUpdated && imageBase64) {
+      data.image = imageBase64;
     }
     
     return fetch(`/api/recipes/${recipe_id}/`, {
       method: "PATCH",
       headers: {
+        "Content-Type": "application/json",
         authorization: `Token ${token}`,
       },
-      body: formData,
+      body: JSON.stringify(data),
     }).then(this.checkResponse);
   }
 
