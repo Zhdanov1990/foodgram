@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -26,13 +25,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_anonymous:
             return False
-        return Subscription.objects.filter(
-            user=user,
-            author=obj,
-        ).exists()
+        return user.following.filter(author=obj).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -149,7 +145,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return True
 
     def get_recipes(self, obj):
-        request = self.context.get('request')
+        request = self.context['request']
         limit = request.query_params.get('recipes_limit')
         qs = obj.author.recipes.all()
         if limit:

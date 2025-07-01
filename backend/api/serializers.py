@@ -1,5 +1,4 @@
 import django.contrib.auth.password_validation as validators
-
 from django.contrib.auth import authenticate, get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from drf_base64.fields import Base64ImageField
